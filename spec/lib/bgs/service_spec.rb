@@ -231,17 +231,17 @@ RSpec.describe BGS::Service do
     end
   end
 
-  describe '#create_note' do
-    it 'creates a note and returns given data' do
-      claim_id = '600242440'
-      reason_text = 'Claim rejected by VA.gov: This application needs manual review.'
-
-      # @TODO put this in before merging!
-      # VCR.use_cassette('bgs/service/create_note') do
-      #   response = bgs_service.create_note(claim_id, reason_text)
-      #
-      #   expect(response).to include()
-      # end
-    end
-  end
+  # @TODO put this in before merging!
+  # describe '#create_note' do
+  #   it 'creates a note and returns given data' do
+  #     claim_id = '600242440'
+  #     reason_text = 'Claim rejected by VA.gov: This application needs manual review.'
+  #
+  #     VCR.use_cassette('bgs/service/create_note') do
+  #       response = bgs_service.create_note(claim_id, reason_text)
+  #
+  #       expect(response).to include()
+  #     end
+  #   end
+  # end
 end
