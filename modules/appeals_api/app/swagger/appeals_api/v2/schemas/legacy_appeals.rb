@@ -8,195 +8,45 @@ module AppealsApi
 
         swagger_component do
           schema :legacyAppeal do
-            property :assignedAttorney do
+            property :id do
               key :type, :string
+              key :description, 'ID from VACOLS (Veteran Appeals Control and Locator Service)'
+              key :example, '3085659'
             end
-
-            property :assignedJudge do
+            property :type do
               key :type, :string
-            end
-
-            property :readableHearingRequestType do
-              key :type, :string
-            end
-
-            property :readableOriginalHearingRequestType do
-              key :type, :string
+              key :description, 'Appeal Type'
+              key :value, 'legacyAppeal'
             end
 
             property :issues do
               key :type, :array
+              key :description, 'Issues on Appeal'
+
               items do
-                property :levels do
-                  key :type, :array
-                  items do
-                    key :type, :string
-                    key :example, 'Schedular'
-                  end
+                property :summary do
+                  key :type, :string
+                  key :description, 'Summary of a single Issue description'
+                  key :example, 'Service connection, hearing loss'
                 end
-
-                property :program, type: :string, example: '02'
-                property :type, type: :string, example: '12'
-                property :codes do
-                  items do
-                    key :type, :string
-                    key :example, '04'
-                  end
-                end
-                property :disposition, type: :string, example: 'F'
-                property :close_date, type: :date
-                property :note, type: :string, example: 'Aut temporibus non sit eum.'
-                property :vacols_sequence_id, type: :integer, example: 7
-                property :labels do
-                  key :type, :array
-                  items do
-                    key :type, :string
-                    key :example, 'Compensation'
-                  end
-                end
-                property :readjudication, type: :boolean, example: false
-                property :reasons, type: :array, example: []
               end
-            end
-
-            property :hearings do
-              key :type, :string
-            end
-
-            property :completedHearingOnPreviousAppeal? do
-              key :type, :string
-            end
-
-            property :appellantIsNotVeteran do
-              key :type, :string
-            end
-
-            property :appellantFullName do
-              key :type, :string
-            end
-
-            property :appellantAddress do
-              key :type, :string
-            end
-
-            property :appellantTz do
-              key :type, :string
-            end
-
-            property :appellantRelationship do
-              key :type, :string
-            end
-
-            property :assignedToLocation do
-              key :type, :string
-            end
-
-            property :vbmsId do
-              key :type, :string
             end
 
             property :veteranFullName do
               key :type, :string
-            end
-
-            property :veteranDeathDate do
-              key :type, :string
-            end
-
-            property :veteranAppellantDeceased do
-              key :type, :string
-            end
-
-            property :veteranFileNumber do
-              key :type, :string
-            end
-
-            property :externalId do
-              key :type, :string
-            end
-
-            property :type do
-              key :type, :string
-            end
-
-            property :aod do
-              key :type, :string
-            end
-
-            property :docketNumber do
-              key :type, :string
-            end
-
-            property :docketRangeDate do
-              key :type, :string
-            end
-
-            property :status do
-              key :type, :string
+              key :example, 'Junior L Fritsch'
             end
 
             property :decisionDate do
               key :type, :string
+              key :description, 'Date of the Appeal\'s original decision'
+              key :example, '2018-09-28T00:00:00.000Z'
             end
 
-            property :form9Date do
+            property :latestSocSsocDate do
               key :type, :string
-            end
-
-            property :nodDate do
-              key :type, :string
-            end
-
-            property :certificationDate do
-              key :type, :string
-            end
-
-            property :paperCase do
-              key :type, :string
-            end
-
-            property :overtime do
-              key :type, :string
-            end
-
-            property :caseflowVeteranId do
-              key :type, :string
-            end
-
-            property :socDate do
-              key :type, :string
-            end
-
-            property :closestRegionalOffice do
-              key :type, :string
-            end
-
-            property :closestRegionalOfficeLabel do
-              key :type, :string
-            end
-
-            property :availableHearingLocations do
-              key :type, :string
-            end
-
-            property :docketName do
-              key :type, :string
-            end
-
-            property :regionalOffice do
-              key :type, :string
-            end
-
-            property :documentId do
-              key :type, :string
-            end
-
-            property :canEditDocumentId do
-              key :type, :string
-            end
-
-            property :attorneyCaseReviewId do
-              key :type, :string
+              key :description, 'Date of the Appeal\'s most recent SOC/SSOC'
+              key :example, '2018-12-29T00:00:00.000Z'
             end
           end
         end
