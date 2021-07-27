@@ -48,7 +48,7 @@ module BGS
       vnp_benefit_claim.update(benefit_claim_record, vnp_benefit_claim_record)
       proc_state = vnp_proc_state_type_cd == 'MANUAL_VAGOV' ? vnp_proc_state_type_cd : 'Ready'
 
-      bgs_service.create_note(benefit_claim_record[:benefit_claim_id], @reason_text)
+      bgs_service.create_note(benefit_claim_record[:benefit_claim_id], @reason_text) if vnp_proc_state_type_cd == 'MANUAL_VAGOV'
 
       bgs_service.update_proc(proc_id, proc_state: proc_state)
     end
