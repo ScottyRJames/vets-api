@@ -27,7 +27,6 @@ module BGS
 
     def submit(payload)
       vnp_proc_state_type_cd = get_state_type(payload)
-
       proc_id = create_proc_id_and_form(vnp_proc_state_type_cd)
       veteran = VnpVeteran.new(proc_id: proc_id, payload: payload, user: @user, claim_type: '130DPNEBNADJ').create
 
