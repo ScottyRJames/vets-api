@@ -225,14 +225,14 @@ module BGS
       notify_of_service_exception(e, __method__, 1, :warn)
     end
 
-    def create_note(claim_id, reason_text)
+    def create_note(claim_id, note_text)
       option_hash = {
         jrn_stt_tc: 'I',
         name: 'Claim rejected by VA.gov',
         bnft_clm_note_tc: 'CLMDVLNOTE',
         clm_id: claim_id,
         ptcpnt_id: @user.participant_id,
-        txt: reason_text
+        txt: note_text
       }.merge!(bgs_auth).except!(:jrn_status_type_cd)
 
       service.notes.create_note(option_hash)
