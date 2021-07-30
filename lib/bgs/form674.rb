@@ -41,8 +41,11 @@ module BGS
 
       vnp_benefit_claim.update(benefit_claim_record, vnp_benefit_claim_record)
 
-      reason_text = 'Claim rejected by VA.gov: This application needs manual review because a 674 was submitted.'
-      bgs_service.create_note(benefit_claim_record[:benefit_claim_id], reason_text)
+      # we only want to add a note if the claim is being set to MANUAL_VAGOV
+      # but for now we are temporarily always setting to MANUAL_VAGOV for 674
+      # when that changes, we need to surround this block of code in an IF statement
+      note_text = 'Claim rejected by VA.gov: This application needs manual review because a 674 was submitted.'
+      bgs_service.create_note(benefit_claim_record[:benefit_claim_id], note_text)
 
       bgs_service.update_proc(proc_id, proc_state: 'MANUAL_VAGOV')
     end
