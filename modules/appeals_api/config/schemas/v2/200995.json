@@ -44,11 +44,11 @@
       "properties": {
         "benefitType":                        { "$ref": "#/definitions/scCreateBenefitType" },
         "veteran":                            { "$ref": "#/definitions/scCreateVeteran" },
-        "newAndRelevantEvidence":             { "$ref": "#/definitions/scCreateNewAndRelevantEvidence" }
+        "evidenceSubmission":             { "$ref": "#/definitions/scEvidenceSubmission" }
       },
       "required": [
         "veteran",
-        "newAndRelevantEvidence"
+        "evidenceSubmission"
       ]
     },
 
