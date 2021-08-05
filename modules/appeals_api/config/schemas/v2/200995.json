@@ -79,6 +79,15 @@
       "required": [ ]
     },
 
+    "scEvidenceSubmission": {
+      "type": "object",
+      "properties": {
+        "evidenceType":  "type": "array",
+        "anyOf": "enum": ["uploaded", "retrieved"]
+      },
+      "if": { "properties": { "evidenceType": { }}
+    },
+
     "scCreateAddress": {
       "type": "object",
       "properties": {
