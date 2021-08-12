@@ -144,6 +144,9 @@ development: &defaults
   transaction_notification:
     namespace: transaction_notification
     each_ttl: 2592000
+  event_stream:
+    namespace: event-stream
+    maxlen: 10000
 test:
   <<: *defaults
   redis:
