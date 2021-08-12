@@ -48,6 +48,23 @@ module VAProfile
         handle_error(e)
       end
 
+      def update_address(address)
+        contact_info = VAProfileRedis::ContactInformation.for_user(@user)
+        address_type =
+          if address.address_pou == VAProfile::Models::BaseAddress::RESIDENCE
+            'residential'
+          else
+            'mailing'
+          end
+
+        address.id = contact_info.public_send(
+          "#{address_type}_address"
+        )&.id
+        verb = address.id.present? ? 'put' : 'post'
+
+        public_send("#{verb}_address", address)
+      end
+
       # POSTs a new address to the VAProfile API
       # @param address [VAProfile::Models::Address] the address to create
       # @return [VAProfile::ContactInformation::AddressTransactionResponse] response wrapper around

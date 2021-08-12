@@ -379,6 +379,38 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
     end
   end
 
+  describe '#update_address' do
+    let(:address) { build(:va_profile_address, vet360_id: user.vet360_id, source_system_user: user.icn, id: nil) }
+
+    before do
+      VCR.insert_cassette('va_profile/contact_information/person_full', VCR::MATCH_EVERYTHING)
+      allow(VAProfile::Configuration::SETTINGS.contact_information).to receive(:cache_enabled).and_return(true)
+    end
+
+    after do
+      VCR.eject_cassette
+    end
+
+    context 'when the address doesnt exist' do
+      before do
+        allow_any_instance_of(VAProfileRedis::ContactInformation).to receive(:residential_address).and_return(nil)
+      end
+
+      it 'makes a post request' do
+        expect(subject).to receive(:post_address).with(address)
+        subject.update_address(address)
+      end
+    end
+
+    context 'when the address exists' do
+      it 'makes a put request' do
+        expect(address).to receive(:id=).with(15035).and_call_original
+        expect(subject).to receive(:put_address).with(address)
+        subject.update_address(address)
+      end
+    end
+  end
+
   describe '#send_contact_change_notification' do
     let(:transaction) { double }
     let(:transaction_status) do
