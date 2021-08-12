@@ -54,6 +54,7 @@ unless ENV['NOCOVERAGE']
     add_group 'ClaimsApi', 'modules/claims_api/'
     add_group 'CovidResearch', 'modules/covid_research/'
     add_group 'CovidVaccine', 'modules/covid_vaccine/'
+    add_group 'EventStream', 'modules/event_stream/'
     add_group 'FacilitiesApi', 'modules/facilities_api/'
     add_group 'HealthQuest', 'modules/health_quest/'
     add_group 'Identity', 'modules/identity/'

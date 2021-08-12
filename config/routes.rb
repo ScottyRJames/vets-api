@@ -367,6 +367,7 @@ Rails.application.routes.draw do
     mount AppealsApi::Engine, at: '/appeals'
     mount ClaimsApi::Engine, at: '/claims', as: 'legacy_claims'
     mount ClaimsApi::Engine, at: '/benefits'
+    mount EventStream::Engine, at: '/event_stream'
     mount Veteran::Engine, at: '/veteran'
     mount VAForms::Engine, at: '/va_forms'
     mount VeteranVerification::Engine, at: '/veteran_verification'

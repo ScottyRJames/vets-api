@@ -16,6 +16,7 @@ path 'modules' do
   gem 'claims_api'
   gem 'covid_research'
   gem 'covid_vaccine'
+  gem 'event_stream'
   gem 'facilities_api'
   gem 'health_quest'
   gem 'identity'
