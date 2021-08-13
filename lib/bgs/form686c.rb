@@ -13,6 +13,8 @@ require_relative '../bid/awards/service'
 
 module BGS
   class Form686c
+    include SentryLogging
+
     REMOVE_CHILD_OPTIONS = %w[report_child18_or_older_is_not_attending_school
                               report_stepchild_not_in_household
                               report_marriage_of_child_under18].freeze
@@ -25,6 +27,7 @@ module BGS
       @note_text = nil
     end
 
+    # rubocop:disable Metrics/MethodLength
     def submit(payload)
       vnp_proc_state_type_cd = get_state_type(payload)
       proc_id = create_proc_id_and_form(vnp_proc_state_type_cd)
@@ -36,6 +39,10 @@ module BGS
       vnp_benefit_claim_record = vnp_benefit_claim.create
 
       set_claim_type(vnp_proc_state_type_cd)
+
+      # temporary logging to troubleshoot
+      log_message_to_sentry("#{proc_id} - #{@end_product_code}", :warn, '', { team: 'vfs-ebenefits' })
+
       benefit_claim_record = BenefitClaim.new(
         args: {
           vnp_benefit_claim: vnp_benefit_claim_record,
@@ -51,6 +58,7 @@ module BGS
       prep_manual_claim(benefit_claim_record[:benefit_claim_id]) if vnp_proc_state_type_cd == 'MANUAL_VAGOV'
       bgs_service.update_proc(proc_id, proc_state: @proc_state)
     end
+    # rubocop:enable Metrics/MethodLength
 
     private
 
@@ -118,8 +126,12 @@ module BGS
     # else use 130DPEBNAJRE (eBenefits Dependency Adjustment Reject)
     def set_claim_type(proc_state)
       if proc_state == 'MANUAL_VAGOV'
-        pension_response = bid_service.get_awards_pension
-        receiving_pension = pension_response.body['awards_pension']['is_in_receipt_of_pension']
+        receiving_pension = false
+
+        if Flipper.enabled?(:dependents_pension_check)
+          pension_response = bid_service.get_awards_pension
+          receiving_pension = pension_response.body['awards_pension']['is_in_receipt_of_pension']
+        end
 
         if receiving_pension
           @end_product_name = 'PMC eBenefits Dependency Adjustment Reject'

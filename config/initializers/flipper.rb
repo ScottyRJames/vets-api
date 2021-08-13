@@ -14,11 +14,11 @@ Rails.application.reloader.to_prepare do
   Flipper.configure do |config|
     config.default do
       activerecord_adapter = Flipper::Adapters::ActiveRecord.new
-      cache = ActiveSupport::Cache::MemoryStore.new
+      cache = Rails.cache
       # Flipper settings will be stored in postgres and cached in memory for 1 minute in production/staging
-      cached_adapter = Flipper::Adapters::ActiveSupportCacheStore.new(activerecord_adapter, cache, expires_in: 1.minute)
-      adapter = Rails.env.development? || Rails.env.test? ? activerecord_adapter : cached_adapter
-      instrumented = Flipper::Adapters::Instrumented.new(adapter, instrumenter: ActiveSupport::Notifications)
+      cached_adapter = Flipper::Adapters::ActiveSupportCacheStore.new(activerecord_adapter, cache,
+                                                                      expires_in: 1.minute)
+      instrumented = Flipper::Adapters::Instrumented.new(cached_adapter, instrumenter: ActiveSupport::Notifications)
       # pass adapter to handy DSL instance
       Flipper.new(instrumented, instrumenter: ActiveSupport::Notifications)
     end
@@ -49,11 +49,13 @@ Rails.application.reloader.to_prepare do
 
         # default features to enabled for test and those explicitly set for development
         if Rails.env.test? ||
-           (Rails.env.development? && feature_config['enable_in_development']) ||
-           (Settings.vsp_environment == 'development' && feature_config['enable_in_development'])
+           (Rails.env.development? && feature_config['enable_in_development'])
           Flipper.enable(feature)
         end
       end
+
+      # this will enable features on dev-api.va.gov if they are set to enable_in_development
+      Flipper.enable(feature) if Settings.vsp_environment == 'development' && feature_config['enable_in_development']
     end
     # remove features from UI that have been removed from code
     removed_features = (Flipper.features.collect(&:name) - FLIPPER_FEATURE_CONFIG['features'].keys)
