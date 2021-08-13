@@ -63,6 +63,26 @@ module VAProfile
         update_model(email, 'email', 'email')
       end
 
+      def update_telephone(telephone)
+        phone_type =
+          case telephone.phone_type
+          when VAProfile::Models::Telephone::MOBILE
+            'mobile_phone'
+          when VAProfile::Models::Telephone::HOME
+            'home_phone'
+          when VAProfile::Models::Telephone::WORK
+            'work_phone'
+          when VAProfile::Models::Telephone::FAX
+            'fax_number'
+          when VAProfile::Models::Telephone::TEMPORARY
+            'temporary_phone'
+          else
+            raise 'invalid phone type'
+          end
+
+        update_model(telephone, phone_type, 'telephone')
+      end
+
       # POSTs a new address to the VAProfile API
       # @param address [VAProfile::Models::Address] the address to create
       # @return [VAProfile::ContactInformation::AddressTransactionResponse] response wrapper around
