@@ -49,7 +49,6 @@ module VAProfile
       end
 
       def update_address(address)
-        contact_info = VAProfileRedis::ContactInformation.for_user(@user)
         address_type =
           if address.address_pou == VAProfile::Models::BaseAddress::RESIDENCE
             'residential'
@@ -57,12 +56,10 @@ module VAProfile
             'mailing'
           end
 
-        address.id = contact_info.public_send(
-          "#{address_type}_address"
-        )&.id
-        verb = address.id.present? ? 'put' : 'post'
+        update_model(address, "#{address_type}_address", 'address')
+      end
 
-        public_send("#{verb}_address", address)
+      def update_email(email)
       end
 
       # POSTs a new address to the VAProfile API
@@ -197,6 +194,14 @@ module VAProfile
       end
 
       private
+
+      def update_model(model, attr, method_name)
+        contact_info = VAProfileRedis::ContactInformation.for_user(@user)
+        model.id = contact_info.public_send(attr)&.id
+        verb = model.id.present? ? 'put' : 'post'
+
+        public_send("#{verb}_#{method_name}", model)
+      end
 
       def get_email_personalisation(type)
         { 'contact_info' => EMAIL_PERSONALISATIONS[type] }
