@@ -408,6 +408,12 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
         attr: 'email',
         id: 8087
       },
+      {
+        model_name: 'permission',
+        factory: 'permission',
+        attr: 'text_permission',
+        id: 361
+      },
     ].each do |spec_data|
       describe "#update_#{spec_data[:model_name]}" do
         let(:model) { build(spec_data[:factory], id: nil) }

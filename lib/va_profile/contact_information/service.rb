@@ -63,6 +63,10 @@ module VAProfile
         update_model(email, 'email', 'email')
       end
 
+      def update_permission(permission)
+        update_model(permission, 'text_permission', 'permission')
+      end
+
       def update_telephone(telephone)
         phone_type =
           case telephone.phone_type
