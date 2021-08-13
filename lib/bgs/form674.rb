@@ -20,6 +20,7 @@ module BGS
       @end_product_code = '130SCHATTEBN'
     end
 
+    # rubocop:disable Metrics/MethodLength
     def submit(payload)
       proc_id = create_proc_id_and_form
       veteran = VnpVeteran.new(proc_id: proc_id, payload: payload, user: @user, claim_type: '130SCHATTEBN').create
@@ -55,6 +56,7 @@ module BGS
 
       bgs_service.update_proc(proc_id, proc_state: 'MANUAL_VAGOV')
     end
+    # rubocop:enable Metrics/MethodLength
 
     private
 
