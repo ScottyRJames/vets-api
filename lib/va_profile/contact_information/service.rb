@@ -60,6 +60,7 @@ module VAProfile
       end
 
       def update_email(email)
+        update_model(email, 'email', 'email')
       end
 
       # POSTs a new address to the VAProfile API
