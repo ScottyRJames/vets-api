@@ -253,7 +253,11 @@ Rails.application.routes.draw do
           post :create_or_update
         end
       end
-      resource :email_addresses, only: %i[create update destroy]
+      resource :email_addresses, only: %i[create update destroy] do
+        collection do
+          post :create_or_update
+        end
+      end
       resource :telephones, only: %i[create update destroy] do
         collection do
           post :create_or_update
