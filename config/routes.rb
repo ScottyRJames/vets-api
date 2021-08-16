@@ -263,7 +263,11 @@ Rails.application.routes.draw do
           post :create_or_update
         end
       end
-      resource :permissions, only: %i[create update destroy]
+      resource :permissions, only: %i[create update destroy] do
+        collection do
+          post :create_or_update
+        end
+      end
       resources :address_validation, only: :create
       post 'initialize_vet360_id', to: 'persons#initialize_vet360_id'
       get 'person/status/:transaction_id', to: 'persons#status', as: 'person/status'
