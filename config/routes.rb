@@ -248,7 +248,11 @@ Rails.application.routes.draw do
       resources :payment_history, only: %i[index]
 
       # Vet360 Routes
-      resource :addresses, only: %i[create update destroy]
+      resource :addresses, only: %i[create update destroy] do
+        collection do
+          post :create_or_update
+        end
+      end
       resource :email_addresses, only: %i[create update destroy]
       resource :telephones, only: %i[create update destroy]
       resource :permissions, only: %i[create update destroy]
