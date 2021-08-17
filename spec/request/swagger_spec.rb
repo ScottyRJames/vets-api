@@ -2424,6 +2424,21 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         end
       end
 
+      it 'supports va_profile create or update address api' do
+        expect(subject).to validate(:post, '/v0/profile/addresses/create_or_update', 401)
+
+        VCR.use_cassette('va_profile/contact_information/put_address_success') do
+          address = build(:va_profile_address)
+
+          expect(subject).to validate(
+            :post,
+            '/v0/profile/addresses/create_or_update',
+            200,
+            headers.merge('_data' => address.as_json)
+          )
+        end
+      end
+
       it 'supports posting va_profile address data' do
         expect(subject).to validate(:post, '/v0/profile/addresses', 401)
 

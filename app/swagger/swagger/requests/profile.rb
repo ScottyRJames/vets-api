@@ -257,6 +257,60 @@ module Swagger
         end
       end
 
+      swagger_path '/v0/profile/addresses/create_or_update' do
+        operation :post do
+          extend Swagger::Responses::AuthenticationError
+
+          key :description, "Create or updates a user's VA profile address"
+          key :operationId, 'changeVaProfileAddress'
+          key :tags, %w[
+            profile
+          ]
+
+          parameter :authorization
+
+          parameter do
+            key :name, :domestic_body
+            key :in, :body
+            key :description, 'Attributes to create a domestic address.'
+            key :required, true
+
+            schema do
+              key :$ref, :PostVet360DomesticAddress
+            end
+          end
+
+          parameter do
+            key :name, :international_body
+            key :in, :body
+            key :description, 'Attributes to create an international address.'
+            key :required, true
+
+            schema do
+              key :$ref, :PostVet360InternationalAddress
+            end
+          end
+
+          parameter do
+            key :name, :military_overseas_body
+            key :in, :body
+            key :description, 'Attributes to create a military overseas address.'
+            key :required, true
+
+            schema do
+              key :$ref, :PostVet360MilitaryOverseasAddress
+            end
+          end
+
+          response 200 do
+            key :description, 'Response is OK'
+            schema do
+              key :$ref, :AsyncTransactionVet360
+            end
+          end
+        end
+      end
+
       swagger_path '/v0/profile/addresses' do
         operation :post do
           extend Swagger::Responses::AuthenticationError
