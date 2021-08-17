@@ -1029,6 +1029,38 @@ module Swagger
         end
       end
 
+      swagger_path '/v0/profile/telephones/create_or_update' do
+        operation :post do
+          extend Swagger::Responses::AuthenticationError
+
+          key :description, 'Create or update a users VA profile telephone'
+          key :operationId, 'changeVaProfileTelephone'
+          key :tags, %w[
+            profile
+          ]
+
+          parameter :authorization
+
+          parameter do
+            key :name, :body
+            key :in, :body
+            key :description, 'Attributes to create a telephone.'
+            key :required, true
+
+            schema do
+              key :$ref, :PostVet360Telephone
+            end
+          end
+
+          response 200 do
+            key :description, 'Response is OK'
+            schema do
+              key :$ref, :AsyncTransactionVet360
+            end
+          end
+        end
+      end
+
       swagger_path '/v0/profile/telephones' do
         operation :post do
           extend Swagger::Responses::AuthenticationError

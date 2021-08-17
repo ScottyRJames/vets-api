@@ -2220,6 +2220,21 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         end
       end
 
+      it 'supports updating va_profile telephone data' do
+        expect(subject).to validate(:post, '/v0/profile/telephones/create_or_update', 401)
+
+        VCR.use_cassette('va_profile/contact_information/put_telephone_success') do
+          telephone = build(:telephone)
+
+          expect(subject).to validate(
+            :post,
+            '/v0/profile/telephones/create_or_update',
+            200,
+            headers.merge('_data' => telephone.as_json)
+          )
+        end
+      end
+
       it 'supports posting va_profile telephone data' do
         expect(subject).to validate(:post, '/v0/profile/telephones', 401)
 
