@@ -601,6 +601,38 @@ module Swagger
         end
       end
 
+      swagger_path '/v0/profile/email_addresses/create_or_update' do
+        operation :post do
+          extend Swagger::Responses::AuthenticationError
+
+          key :description, 'Create or update a users VA profile email address'
+          key :operationId, 'changeVaProfileEmailAddress'
+          key :tags, %w[
+            profile
+          ]
+
+          parameter :authorization
+
+          parameter do
+            key :name, :body
+            key :in, :body
+            key :description, 'Attributes to create an email address.'
+            key :required, true
+
+            schema do
+              key :$ref, :PostVet360Email
+            end
+          end
+
+          response 200 do
+            key :description, 'Response is OK'
+            schema do
+              key :$ref, :AsyncTransactionVet360
+            end
+          end
+        end
+      end
+
       swagger_path '/v0/profile/email_addresses' do
         operation :post do
           extend Swagger::Responses::AuthenticationError
