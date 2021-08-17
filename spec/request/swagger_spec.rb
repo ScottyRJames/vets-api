@@ -2515,6 +2515,21 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         end
       end
 
+      it 'supports updating va_profile permission data' do
+        expect(subject).to validate(:post, '/v0/profile/permissions/create_or_update', 401)
+
+        VCR.use_cassette('va_profile/contact_information/put_permission_success') do
+          permission = build(:permission)
+
+          expect(subject).to validate(
+            :post,
+            '/v0/profile/permissions/create_or_update',
+            200,
+            headers.merge('_data' => permission.as_json)
+          )
+        end
+      end
+
       it 'supports posting va_profile permission data' do
         expect(subject).to validate(:post, '/v0/profile/permissions', 401)
 
