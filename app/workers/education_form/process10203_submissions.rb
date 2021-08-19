@@ -26,15 +26,15 @@ module EducationForm
     )
       return false unless evss_is_healthy?
 
-      count = records.filter do |r|
+      init_count = records.filter do |r|
         r.education_stem_automated_decision.automated_decision_state == EducationStemAutomatedDecision::INIT
       end.count
 
-      if count.zero?
+      if init_count.zero?
         log_info('No records with init status to process.')
         return true
       else
-        log_info("Processing #{count} application(s) with init status")
+        log_info("Processing #{init_count} application(s) with init status")
       end
 
       user_submissions = group_user_uuid(records)
