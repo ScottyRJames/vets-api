@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'evss/gi_bill_status/service'
+
 class SavedClaim::EducationBenefits::VA10203 < SavedClaim::EducationBenefits
   include SentryLogging
   add_form_and_validation('22-10203')
@@ -15,7 +17,6 @@ class SavedClaim::EducationBenefits::VA10203 < SavedClaim::EducationBenefits
       create_stem_automated_decision
     end
 
-
     email_sent(false)
     return unless FeatureFlipper.send_email?
 
@@ -25,7 +26,10 @@ class SavedClaim::EducationBenefits::VA10203 < SavedClaim::EducationBenefits
       education_benefits_claim.education_stem_automated_decision.update(confirmation_email_sent_at: Time.zone.now)
       authorized = @user.authorize(:evss, :access?)
 
-      EducationForm::SendSchoolCertifyingOfficialsEmail.perform_async(id ,less_than_six_months?, get_facility_code) if authorized
+      if authorized
+        EducationForm::SendSchoolCertifyingOfficialsEmail.perform_async(id, less_than_six_months?,
+                                                                        get_facility_code)
+      end
     end
   end
   # rubocop:enable Metrics/CyclomaticComplexity
@@ -37,7 +41,7 @@ class SavedClaim::EducationBenefits::VA10203 < SavedClaim::EducationBenefits
       user_uuid: @user.uuid,
       auth_headers_json: EVSS::AuthHeaders.new(@user).to_h.to_json,
       poa: get_user_poa,
-      remaining_entitlement: remaining_entitlement,
+      remaining_entitlement: remaining_entitlement
     ).save
   end
 
@@ -90,5 +94,4 @@ class SavedClaim::EducationBenefits::VA10203 < SavedClaim::EducationBenefits
 
     remaining_entitlement <= 180
   end
-
 end

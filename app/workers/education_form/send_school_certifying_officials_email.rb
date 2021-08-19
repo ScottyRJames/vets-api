@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'evss/gi_bill_status/service'
-
 module EducationForm
   class SendSchoolCertifyingOfficialsEmail
     include Sidekiq::Worker
@@ -11,12 +9,10 @@ module EducationForm
 
       @claim.email_sent(false)
 
-      if less_than_six_months
-        if facility_code.present?
-          @institution = get_institution(facility_code)
+      if less_than_six_months && facility_code.present?
+        @institution = get_institution(facility_code)
 
-          send_sco_email
-        end
+        send_sco_email
       end
     end
 
@@ -36,7 +32,6 @@ module EducationForm
     def get_institution(facility_code)
       GIDSRedis.new.get_institution_details_v0({ id: facility_code })[:data][:attributes]
     end
-
 
     def school_changed?
       application = @claim.parsed_form
