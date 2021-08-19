@@ -44,7 +44,7 @@ module EducationForm
     private
 
     def evss_is_healthy?
-      Settings.evss.mock_claims || EVSS::Service.service_is_up?
+      Settings.evss.mock_claims || EVSS::VSOSearch::Service.service_is_up?
     end
 
     # Group the submissions by user_uuid
