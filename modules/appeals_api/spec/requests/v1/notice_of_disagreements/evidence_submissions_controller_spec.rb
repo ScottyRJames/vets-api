@@ -7,8 +7,12 @@ describe AppealsApi::V1::DecisionReviews::NoticeOfDisagreements::EvidenceSubmiss
   include FixtureHelpers
   let(:notice_of_disagreement) { create(:notice_of_disagreement, :board_review_hearing) }
   let(:headers) { fixture_as_json 'valid_10182_headers.json' }
+  let(:invalid_characters_data) { fixture_as_json 'invalid_10182_characters.json' }
+  let(:invalid_characters_headers) { fixture_as_json 'invalid_10182_headers_characters.json' }
   let(:evidence_submissions) { create_list(:evidence_submission, 3, supportable: notice_of_disagreement) }
   let(:path) { '/services/appeals/v1/decision_reviews/notice_of_disagreements/evidence_submissions/' }
+
+  let(:parsed) { JSON.parse(response.body) }
 
   def with_s3_settings
     with_settings(Settings.modules_appeals_api.evidence_submissions.location,
@@ -85,6 +89,15 @@ describe AppealsApi::V1::DecisionReviews::NoticeOfDisagreements::EvidenceSubmiss
             expect(data['attributes']['appealType']).to eq('NoticeOfDisagreement')
             expect(data['attributes']['location']).to eq('http://another.fakesite.com/rewrittenpath/uuid')
           end
+        end
+      end
+
+      context 'when data includes unsupported characters (chars outside of windows-1252)' do
+        it 'returns an error' do
+          post(path, params: invalid_characters_data, headers: invalid_characters_headers)
+          expect(response.status).to eq(422)
+          expect(parsed['errors'][0]['detail']).to include 'Invalid characters'
+          expect(parsed['errors'][0]['meta']).to include 'pattern'
         end
       end
 

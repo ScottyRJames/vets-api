@@ -16,6 +16,8 @@ describe AppealsApi::V1::DecisionReviews::NoticeOfDisagreementsController, type:
     @invalid_data = fixture_to_s 'invalid_10182.json'
     @headers = fixture_as_json 'valid_10182_headers.json'
     @minimum_required_headers = fixture_as_json 'valid_10182_headers_minimum.json'
+    @invalid_characters_data = fixture_as_json 'invalid_10182_characters.json'
+    @invalid_characters_headers = fixture_as_json 'invalid_10182_headers_characters.json'
   end
 
   let(:parsed) { JSON.parse(response.body) }
@@ -23,8 +25,8 @@ describe AppealsApi::V1::DecisionReviews::NoticeOfDisagreementsController, type:
   describe '#create' do
     let(:path) { base_path 'notice_of_disagreements' }
 
-    context 'creates an NOD and persists the data' do
-      it 'with all headers' do
+    context 'when all headers are present and valid' do
+      it 'creates an NOD and persists the data' do
         post(path, params: @data, headers: @headers)
         nod = AppealsApi::NoticeOfDisagreement.find_by(id: parsed['data']['id'])
 
@@ -32,16 +34,29 @@ describe AppealsApi::V1::DecisionReviews::NoticeOfDisagreementsController, type:
         expect(parsed['data']['type']).to eq('noticeOfDisagreement')
         expect(parsed['data']['attributes']['status']).to eq('pending')
       end
+    end
 
-      it 'with the minimum required headers' do
+    context 'with minimum valid headers' do
+      it 'creates an NOD and persists the data' do
         post(path, params: @minimum_valid_data, headers: @minimum_required_headers)
         expect(parsed['data']['type']).to eq('noticeOfDisagreement')
       end
+    end
 
-      it 'fails when a required header is missing' do
+    context 'when a required headers is missing' do
+      it 'returns an error' do
         post(path, params: @data, headers: @minimum_required_headers.except('X-VA-SSN'))
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
+      end
+    end
+
+    context 'when data includes unsupported characters (chars outside of windows-1252)' do
+      it 'returns an error' do
+        post(path, params: @invalid_characters_data, headers: @invalid_characters_headers)
+        expect(response.status).to eq(422)
+        expect(parsed['errors'][0]['detail']).to include 'Invalid characters'
+        expect(parsed['errors'][0]['meta']).to include 'pattern'
       end
     end
 
@@ -96,6 +111,14 @@ describe AppealsApi::V1::DecisionReviews::NoticeOfDisagreementsController, type:
         expect(parsed['errors'].first.keys).to include(*expected_keys)
         expect(parsed['errors'][0]['meta']['missing_fields']).to eq ['address']
         expect(parsed['errors'][0]['source']['pointer']).to eq '/data/attributes/veteran'
+      end
+    end
+
+    context 'when data includes unsupported characters (chars outside of windows-1252)' do
+      it 'returns an error' do
+        post(path, params: @invalid_characters_data, headers: @invalid_characters_headers)
+        expect(response.status).to eq(422)
+        expect(parsed['errors'][0]['detail']).to include 'Invalid characters'
       end
     end
 
