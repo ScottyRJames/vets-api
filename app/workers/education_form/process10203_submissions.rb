@@ -27,13 +27,14 @@ module EducationForm
     )
       return false unless evss_is_healthy?
 
-      if records.count.zero?
-        log_info('No records to process.')
+      count = records.filter do |r|
+        r.education_stem_automated_decision.automated_decision_state == EducationStemAutomatedDecision::INIT
+      end.count
+
+      if count.zero?
+        log_info('No records with init status to process.')
         return true
       else
-        count = records.filter do |r|
-          r.education_stem_automated_decision.automated_decision_state == EducationStemAutomatedDecision::INIT
-        end.count
         log_info("Processing #{count} application(s) with init status")
       end
 
