@@ -52,7 +52,6 @@ module EducationForm
       records.group_by { |ebc| ebc.education_stem_automated_decision&.user_uuid }
     end
 
-    # If the user doesn't have EVSS data mark the 10203 as PROCESSED
     # If there are multiple submissions for a user compare un-submitted to most recent processed
     #   by EducationForm::CreateDailySpoolFiles
     # Otherwise check submission data and EVSS data to see if submission can be marked as PROCESSED
@@ -143,6 +142,7 @@ module EducationForm
         unprocessed_form.benefit_left == processed_form.benefit_left
     end
 
+    # If the user doesn't have EVSS data mark the 10203 as PROCESSED
     # Set status to DENIED when EVSS data for a user shows there is more than 6 months of remaining_entitlement
     #
     # This is only checking EVSS data until form questions that affect setting to DENIED have been reviewed
@@ -168,7 +168,7 @@ module EducationForm
       months * 30 + days
     end
 
-    # Inverse of less than six months check performed in EducationForm::SendSchoolCertifyingOfficialsEmail
+    # Inverse of less than six months check performed in SavedClaim::EducationBenefits::VA10203
     def more_than_six_months?(remaining_entitlement)
       return false if remaining_entitlement.blank?
 
