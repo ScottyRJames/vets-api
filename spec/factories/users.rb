@@ -148,10 +148,6 @@ FactoryBot.define do
     trait :loa3 do
       authn_context { LOA::IDME_LOA3_VETS }
 
-      transient do
-        multifactor { true }
-      end
-
       sign_in do
         {
           service_name: SAML::User::AUTHN_CONTEXTS[authn_context][:sign_in][:service_name]
