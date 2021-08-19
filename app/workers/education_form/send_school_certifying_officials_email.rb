@@ -6,18 +6,14 @@ module EducationForm
   class SendSchoolCertifyingOfficialsEmail
     include Sidekiq::Worker
 
-    def perform(user_uuid, claim_id)
-      @user = User.find(user_uuid)
+    def perform(claim_id, less_than_six_months, facility_code)
       @claim = SavedClaim::EducationBenefits::VA10203.find(claim_id)
 
       @claim.email_sent(false)
 
-      @gi_bill_status = get_gi_bill_status
-      if less_than_six_months?
-        @facility_code = get_facility_code
-
-        if @facility_code.present?
-          @institution = get_institution
+      if less_than_six_months
+        if facility_code.present?
+          @institution = get_institution(facility_code)
 
           send_sco_email
         end
@@ -37,34 +33,10 @@ module EducationForm
 
     private
 
-    def get_gi_bill_status
-      service = EVSS::GiBillStatus::Service.new(@user)
-      service.get_gi_bill_status
-    rescue => e
-      Rails.logger.error "Failed to retrieve GiBillStatus data: #{e.message}"
-      {}
+    def get_institution(facility_code)
+      GIDSRedis.new.get_institution_details_v0({ id: facility_code })[:data][:attributes]
     end
 
-    def get_facility_code
-      most_recent = @gi_bill_status.enrollments.max_by(&:begin_date)
-
-      return {} if most_recent.blank?
-
-      most_recent.facility_code
-    end
-
-    def get_institution
-      GIDSRedis.new.get_institution_details_v0({ id: @facility_code })[:data][:attributes]
-    end
-
-    def less_than_six_months?
-      return false if @gi_bill_status.remaining_entitlement.blank?
-
-      months = @gi_bill_status.remaining_entitlement.months
-      days = @gi_bill_status.remaining_entitlement.days
-
-      ((months * 30) + days) <= 180
-    end
 
     def school_changed?
       application = @claim.parsed_form
