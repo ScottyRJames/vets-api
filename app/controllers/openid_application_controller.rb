@@ -36,9 +36,9 @@ class OpenidApplicationController < ApplicationController
     return false if token.blank?
 
     # Only want to fetch the Okta profile if the session isn't already established and not a CC token
-    @session = Session.find(hash_token(token)) unless token.client_credentials_token?
+    @session = Session.find(hash_token(token)) unless  token.payload['static'] || token.client_credentials_token?
     profile = @session.profile unless @session.nil? || @session.profile.nil?
-    profile = fetch_profile(token.identifiers.okta_uid) unless token.client_credentials_token? || !profile.nil?
+    profile = fetch_profile(token.identifiers.okta_uid) unless token.payload['static'] || token.client_credentials_token? || !profile.nil?
     populate_ssoi_token_payload(profile) if !profile.nil? && profile.attrs['last_login_type'] == 'ssoi'
 
     if @session.nil? && !token.client_credentials_token?
@@ -86,6 +86,12 @@ class OpenidApplicationController < ApplicationController
     end
   end
 
+  def handle_opaque_token(token_string, aud)
+    opaque_token = OpaqueToken.new(token_string, aud)
+    opaque_token.set_payload(fetch_issued(token_string))
+    opaque_token
+  end
+
   def populate_ssoi_token_payload(profile)
     token.payload['last_login_type'] = 'ssoi'
     token.payload['icn'] = profile.attrs['icn']
@@ -103,8 +109,8 @@ class OpenidApplicationController < ApplicationController
     if jwt?(token_string)
       Token.new(token_string, fetch_aud)
     else
-      # Future block for opaque tokens
-      raise error_klass('Invalid token.')
+      # Handle opaque token
+      handle_opaque_token(token_string, fetch_aud)
     end
   end
 
@@ -196,6 +202,21 @@ class OpenidApplicationController < ApplicationController
   rescue => e
     log_message_to_sentry('Error retrieving smart launch context for OIDC token: ' + e.message, :error)
     raise error_klass('Invalid launch context')
+  end
+
+  def fetch_issued(token_string)
+    return nil unless Settings.oidc.issued_url
+    response = RestClient.get(Settings.oidc.issued_url,
+                              { Authorization: 'Bearer ' + token_string })
+    raise error_klass('Invalid token') if response.nil?
+
+    if response.code == 200
+      json_response = JSON.parse(response.body)
+      json_response
+    end
+  rescue => e
+    log_message_to_sentry('Invalid token screening for issued: ' + e.message, :error)
+    raise error_klass('Invalid token')
   end
 
   def hash_token(token)
