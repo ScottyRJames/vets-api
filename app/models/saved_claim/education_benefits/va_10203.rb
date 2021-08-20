@@ -81,7 +81,7 @@ class SavedClaim::EducationBenefits::VA10203 < SavedClaim::EducationBenefits
   end
 
   def remaining_entitlement
-    return nil if @gi_bill_status.remaining_entitlement&.blank?
+    return nil if @gi_bill_status == {} || @gi_bill_status.remaining_entitlement.blank?
 
     months = @gi_bill_status.remaining_entitlement.months
     days = @gi_bill_status.remaining_entitlement.days
