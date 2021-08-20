@@ -26,12 +26,13 @@ module VAForms
     end
 
     def add_tags_to_form(form_name, tags_to_add)
-      form = VAForms::Form.find_by_form_name(form_name)
+      form = VAForms::Form.find_by(form_name: form_name)
       return if form.blank? || form.tags.include?(tags_to_add)
 
       form.update_attribute(:tags, "#{form.tags} #{tags_to_add}")
     rescue
-      Rails.logger.send(:error, "VAForms:UpdateFormTagsService failed to add tags to form_name:#{form_name}, tags_to_add:#{tags_to_add}")
+      Rails.logger.send(:error, "VAForms:UpdateFormTagsService failed to add tags to form_name:#{form_name},
+      tags_to_add:#{tags_to_add}")
     end
   end
 end
