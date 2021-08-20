@@ -71,7 +71,7 @@ class SavedClaim::EducationBenefits::VA10203 < SavedClaim::EducationBenefits
   end
 
   def get_facility_code
-    return {} if @gi_bill_status.enrollments.blank?
+    return {} if @gi_bill_status == {} || @gi_bill_status.enrollments.blank?
 
     most_recent = @gi_bill_status.enrollments.max_by(&:begin_date)
 
