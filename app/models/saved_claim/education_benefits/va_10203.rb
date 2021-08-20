@@ -90,7 +90,7 @@ class SavedClaim::EducationBenefits::VA10203 < SavedClaim::EducationBenefits
   end
 
   def less_than_six_months?
-    return false if @gi_bill_status.remaining_entitlement.blank?
+    return false if remaining_entitlement.blank?
 
     remaining_entitlement <= 180
   end

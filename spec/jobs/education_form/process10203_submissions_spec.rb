@@ -83,7 +83,7 @@ RSpec.describe EducationForm::Process10203Submissions, type: :model, form: :educ
 
         context 'multiple submissions' do
           before do
-            expect(FeatureFlipper).to receive(:send_email?).twice.and_return(false)
+            expect(FeatureFlipper).to receive(:send_email?).once.and_return(false)
           end
 
           it 'without any be processed by CreateDailySpoolFiles' do
