@@ -106,16 +106,24 @@ RSpec.describe EducationForm::Process10203Submissions, type: :model, form: :educ
         end
       end
 
-      it 'evss user with more than 180 days is denied' do
-        application_10203 = create(:va10203, :automated_bad_answers)
-        application_10203.after_submit(evss_user)
-        allow_any_instance_of(EVSS::VSOSearch::Service).to receive(:get_current_info)
-                                                             .and_return(evss_response_with_poa.body)
+      context 'evss user with more than 180 days' do
+        before do
+          gi_bill_status = build(:gi_bill_status_response)
+          allow_any_instance_of(EVSS::GiBillStatus::Service).to receive(:get_gi_bill_status)
+                                                                    .and_return(gi_bill_status)
+        end
 
-        expect do
-          subject.perform
-        end.to change { EducationStemAutomatedDecision.init.count }.from(1).to(0)
-                   .and change { EducationStemAutomatedDecision.denied.count }.from(0).to(1)
+        it 'is denied' do
+          application_10203 = create(:va10203, :automated_bad_answers)
+          application_10203.after_submit(evss_user)
+          allow_any_instance_of(EVSS::VSOSearch::Service).to receive(:get_current_info)
+                                                               .and_return(evss_response_with_poa.body)
+
+          expect do
+            subject.perform
+          end.to change { EducationStemAutomatedDecision.init.count }.from(1).to(0)
+                     .and change { EducationStemAutomatedDecision.denied.count }.from(0).to(1)
+        end
       end
 
       it 'evss user with no entitlement is processed' do
