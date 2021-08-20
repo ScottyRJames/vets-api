@@ -35,10 +35,13 @@ class OpenidApplicationController < ApplicationController
   def authenticate_token
     return false if token.blank?
 
+    # Static token gets a pass
+    return true if token.payload['static']
+
     # Only want to fetch the Okta profile if the session isn't already established and not a CC token
-    @session = Session.find(hash_token(token)) unless  token.payload['static'] || token.client_credentials_token?
+    @session = Session.find(hash_token(token)) unless token.client_credentials_token?
     profile = @session.profile unless @session.nil? || @session.profile.nil?
-    profile = fetch_profile(token.identifiers.okta_uid) unless token.payload['static'] || token.client_credentials_token? || !profile.nil?
+    profile = fetch_profile(token.identifiers.okta_uid) unless token.client_credentials_token? || !profile.nil?
     populate_ssoi_token_payload(profile) if !profile.nil? && profile.attrs['last_login_type'] == 'ssoi'
 
     if @session.nil? && !token.client_credentials_token?

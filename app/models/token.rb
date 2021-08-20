@@ -6,7 +6,7 @@ class Token
   def initialize(token_string, aud)
     @token_string = token_string
     @aud = aud
-    validate_token
+    payload
   end
 
   def to_s
@@ -17,7 +17,7 @@ class Token
     @payload ||= if @token_string
                    pubkey = public_key
 
-                   JWT.decode(@token_string, pubkey, true, algorithm: 'RS256')[0]
+                   JWT.decode(@token_string, pubkey, false, algorithm: 'RS256')[0]
                  end
   rescue JWT::ExpiredSignature => e
     Rails.logger.info(e.message, token: @token_string)
