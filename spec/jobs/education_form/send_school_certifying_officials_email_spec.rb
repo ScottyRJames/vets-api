@@ -40,7 +40,7 @@ RSpec.describe EducationForm::SendSchoolCertifyingOfficialsEmail, type: :model, 
       end
 
       it 'sco email sent is false' do
-        sco_email_sent_false(true , '1')
+        sco_email_sent_false(true, '1')
       end
     end
 
@@ -53,7 +53,7 @@ RSpec.describe EducationForm::SendSchoolCertifyingOfficialsEmail, type: :model, 
 
       it 'sco email sent is false' do
         form = create(:va10203, :school_changed)
-        subject.perform(form.id,true, '1')
+        subject.perform(form.id, true, '1')
         db_claim = SavedClaim::EducationBenefits::VA10203.find(form.id)
 
         expect(db_claim.parsed_form['scoEmailSent']).to eq(false)
