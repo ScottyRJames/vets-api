@@ -250,7 +250,7 @@ module BGS
 
       service.notes.create_note(option_hash)
     rescue => e
-      notify_of_service_exception(e, __method__, 1, :warn)
+      notify_of_service_exception("#{claim_id} - #{e}", __method__, 1, :warn)
     end
 
     private
