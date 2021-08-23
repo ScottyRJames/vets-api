@@ -394,13 +394,13 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
         model_name: 'address',
         factory: 'va_profile_address',
         attr: 'residential_address',
-        id: 15035
+        id: 15_035
       },
       {
         model_name: 'telephone',
         factory: 'telephone',
         attr: 'mobile_phone',
-        id: 17259
+        id: 17_259
       },
       {
         model_name: 'email',
@@ -413,7 +413,7 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
         factory: 'permission',
         attr: 'text_permission',
         id: 361
-      },
+      }
     ].each do |spec_data|
       describe "#update_#{spec_data[:model_name]}" do
         let(:model) { build(spec_data[:factory], id: nil) }
@@ -424,7 +424,9 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
           end
 
           it 'makes a post request' do
-            expect(subject).to receive("post_#{spec_data[:model_name]}").with(model)
+            expect_any_instance_of(
+              VAProfile::ContactInformation::Service
+            ).to receive("post_#{spec_data[:model_name]}").with(model)
             subject.public_send("update_#{spec_data[:model_name]}", model)
           end
         end
@@ -432,7 +434,9 @@ describe VAProfile::ContactInformation::Service, skip_vet360: true do
         context "when the #{spec_data[:model_name]} exists" do
           it 'makes a put request' do
             expect(model).to receive(:id=).with(spec_data[:id]).and_call_original
-            expect(subject).to receive("put_#{spec_data[:model_name]}").with(model)
+            expect_any_instance_of(
+              VAProfile::ContactInformation::Service
+            ).to receive("put_#{spec_data[:model_name]}").with(model)
             subject.public_send("update_#{spec_data[:model_name]}", model)
           end
         end

@@ -2174,7 +2174,6 @@ RSpec.describe 'the API documentation', type: %i[apivore request], order: :defin
         end
       end
 
-
       it 'supports posting va_profile email address data' do
         expect(subject).to validate(:post, '/v0/profile/email_addresses', 401)
 
