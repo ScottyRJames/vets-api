@@ -18,5 +18,18 @@ class OpaqueToken
 
   def set_payload(payload)
     @payload = payload
+    @payload['scp'] = @payload['scopes'] if @payload['scopes']
+  end
+
+  def client_credentials_token?
+    false
+  end
+
+  def ssoi_token?
+    false
+  end
+
+  def static?
+    payload['static']
   end
 end
