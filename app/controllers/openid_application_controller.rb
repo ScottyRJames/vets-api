@@ -223,8 +223,9 @@ class OpenidApplicationController < ApplicationController
       json_response
     end
   rescue => e
-    log_message_to_sentry('Invalid token screening for issued: ' + e.message, :error)
-    raise error_klass('Invalid token')
+    raise raise error_klass('Invalid token') if e.to_s.include?('Unauthorized')
+
+    raise Common::Exceptions::ServiceError('Issued service error')
   end
 
   def hash_token(token)
