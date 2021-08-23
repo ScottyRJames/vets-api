@@ -209,6 +209,7 @@ class OpenidApplicationController < ApplicationController
 
   def fetch_issued(token_string)
     return nil unless Settings.oidc.issued_url
+
     response = RestClient.get(Settings.oidc.issued_url,
                               { Authorization: 'Bearer ' + token_string })
     raise error_klass('Invalid token') if response.nil?

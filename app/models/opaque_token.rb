@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class OpaqueToken
-  attr_reader :token_string
+  attr_reader :token_string, :payload
 
   def initialize(token_string, aud)
     @token_string = token_string
@@ -10,10 +10,6 @@ class OpaqueToken
 
   def to_s
     @token_string
-  end
-
-  def payload
-    @payload
   end
 
   def set_payload(payload)
