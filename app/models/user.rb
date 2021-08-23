@@ -312,6 +312,10 @@ class User < Common::RedisStore
     mpi_profile&.vha_facility_ids || []
   end
 
+  def vha_facility_hash
+    mpi_profile&.vha_facility_hash || {}
+  end
+
   def can_access_id_card?
     loa3? && edipi.present? &&
       ID_CARD_ALLOWED_STATUSES.include?(veteran_status.title38_status)
@@ -449,9 +453,9 @@ class User < Common::RedisStore
 
   def bgs_relationships
     bgs_dependents = BGS::DependentService.new(self).get_dependents
-    return unless bgs_dependents.presence
+    return unless bgs_dependents.presence && bgs_dependents[:persons]
 
-    bgs_dependents['persons'].map { |dependent| UserRelationship.from_bgs_dependent(dependent) }
+    bgs_dependents[:persons].map { |dependent| UserRelationship.from_bgs_dependent(dependent) }
   end
 
   def pciu

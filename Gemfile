@@ -36,8 +36,8 @@ gem 'sass-rails', '>= 6'
 
 # Anchored versions, do not change
 gem 'puma', '~> 5.4.0'
-gem 'puma-plugin-statsd', '~> 1.2.1'
-gem 'rails', '~> 6.1.3'
+gem 'puma-plugin-statsd', '~> 2.0.0'
+gem 'rails', '~> 6.1'
 
 # Gems with special version/repo needs
 gem 'active_model_serializers', git: 'https://github.com/department-of-veterans-affairs/active_model_serializers', branch: 'master'

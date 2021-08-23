@@ -3,6 +3,7 @@
 require 'evss/disability_compensation_form/service'
 require 'evss/disability_compensation_form/service_exception'
 require 'evss/error_middleware'
+require 'evss/reference_data/service'
 require 'common/exceptions'
 require 'jsonapi/parser'
 
@@ -147,6 +148,30 @@ module ClaimsApi
         #
         def validate_form_526_submission_values!
           validate_form_526_submission_claim_date!
+          validate_form_526_application_expiration_date!
+          validate_form_526_claimant_certification!
+          validate_form_526_location_codes!
+          validate_form_526_service_information_confinements!
+          validate_form_526_veteran_homelessness!
+          validate_form_526_service_pay!
+          validate_form_526_title10_activation_date!
+        end
+
+        def validate_form_526_title10_activation_date!
+          title10_activation_date = form_attributes.dig('serviceInformation',
+                                                        'reservesNationalGuardService',
+                                                        'title10Activation',
+                                                        'title10ActivationDate')
+          return if title10_activation_date.blank?
+
+          end_dates = form_attributes['serviceInformation']['servicePeriods'].map do |service_period|
+            Date.parse(service_period['activeDutyEndDate'])
+          end
+
+          return if Date.parse(title10_activation_date) > end_dates.min &&
+                    Date.parse(title10_activation_date) <= Time.zone.now
+
+          raise ::Common::Exceptions::InvalidFieldValue.new('title10ActivationDate', title10_activation_date)
         end
 
         def validate_form_526_submission_claim_date!
@@ -154,6 +179,115 @@ module ClaimsApi
           return if Date.parse(form_attributes['claimDate']) <= Time.zone.today
 
           raise ::Common::Exceptions::InvalidFieldValue.new('claimDate', form_attributes['claimDate'])
+        end
+
+        def validate_form_526_application_expiration_date!
+          return if Date.parse(form_attributes['applicationExpirationDate']) >= Time.zone.today
+
+          raise ::Common::Exceptions::InvalidFieldValue.new('applicationExpirationDate',
+                                                            form_attributes['applicationExpirationDate'])
+        end
+
+        def validate_form_526_claimant_certification!
+          return unless form_attributes['claimantCertification'] == false
+
+          raise ::Common::Exceptions::InvalidFieldValue.new('claimantCertification',
+                                                            form_attributes['claimantCertification'])
+        end
+
+        def validate_form_526_location_codes!
+          locations_response = EVSS::ReferenceData::Service.new(@current_user).get_separation_locations
+          separation_locations = locations_response.separation_locations
+          form_attributes['serviceInformation']['servicePeriods'].each do |service_period|
+            next if Date.parse(service_period['activeDutyEndDate']) <= Time.zone.today
+            next if separation_locations.any? do |location|
+                      location['code'] == service_period['separationLocationCode']
+                    end
+
+            raise ::Common::Exceptions::InvalidFieldValue.new('separationLocationCode',
+                                                              form_attributes['separationLocationCode'])
+          end
+        end
+
+        def validate_form_526_service_information_confinements!
+          confinements = form_attributes['serviceInformation']['confinements']
+          service_periods = form_attributes['serviceInformation']['servicePeriods']
+
+          return if confinements.nil?
+
+          return if confinements_within_service_periods?(confinements,
+                                                         service_periods) && confinements_dont_overlap?(confinements)
+
+          raise ::Common::Exceptions::InvalidFieldValue.new('confinements', confinements)
+        end
+
+        def confinements_within_service_periods?(confinements, service_periods)
+          confinements.each do |confinement|
+            next if service_periods.any? do |service_period|
+              active_duty_start = Date.parse(service_period['activeDutyBeginDate'])
+              active_duty_end = Date.parse(service_period['activeDutyEndDate'])
+              time_range = active_duty_start..active_duty_end
+
+              time_range.cover?(Date.parse(confinement['confinementBeginDate'])) &&
+              time_range.cover?(Date.parse(confinement['confinementEndDate']))
+            end
+
+            return false
+          end
+
+          true
+        end
+
+        def confinements_dont_overlap?(confinements)
+          return true if confinements.length < 2
+
+          confinements.combination(2) do |combo|
+            range1 = Date.parse(combo[0]['confinementBeginDate'])..Date.parse(combo[0]['confinementEndDate'])
+            range2 = Date.parse(combo[1]['confinementBeginDate'])..Date.parse(combo[1]['confinementEndDate'])
+            return false if range1.overlaps?(range2)
+          end
+
+          true
+        end
+
+        def validate_form_526_veteran_homelessness!
+          if too_many_homelessness_attributes_provided? || unnecessary_homelessness_point_of_contact_provided?
+            raise ::Common::Exceptions::InvalidFieldValue.new(
+              'homelessness',
+              form_attributes['veteran']['homelessness']
+            )
+          end
+        end
+
+        def validate_form_526_service_pay!
+          receiving_attr    = form_attributes.dig('servicePay', 'militaryRetiredPay', 'receiving')
+          will_receive_attr = form_attributes.dig('servicePay', 'militaryRetiredPay', 'willReceiveInFuture')
+
+          return if receiving_attr.nil? || will_receive_attr.nil?
+          return unless receiving_attr == will_receive_attr
+
+          # EVSS does not allow both attributes to be the same value (unless that value is nil)
+          raise ::Common::Exceptions::InvalidFieldValue.new(
+            'servicePay.militaryRetiredPay',
+            form_attributes['servicePay']['militaryRetiredPay']
+          )
+        end
+
+        def too_many_homelessness_attributes_provided?
+          currently_homeless_attr = form_attributes.dig('veteran', 'homelessness', 'currentlyHomeless')
+          homelessness_risk_attr  = form_attributes.dig('veteran', 'homelessness', 'homelessnessRisk')
+
+          # EVSS does not allow both attributes to be provided at the same time
+          currently_homeless_attr.present? && homelessness_risk_attr.present?
+        end
+
+        def unnecessary_homelessness_point_of_contact_provided?
+          currently_homeless_attr = form_attributes.dig('veteran', 'homelessness', 'currentlyHomeless')
+          homelessness_risk_attr  = form_attributes.dig('veteran', 'homelessness', 'homelessnessRisk')
+          homelessness_poc_attr   = form_attributes.dig('veteran', 'homelessness', 'pointOfContact')
+
+          # EVSS does not allow passing a 'pointOfContact' if neither homelessness attribute is provided
+          currently_homeless_attr.blank? && homelessness_risk_attr.blank? && homelessness_poc_attr.present?
         end
 
         def flashes

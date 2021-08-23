@@ -90,6 +90,10 @@ FactoryBot.define do
       loa { nil }
     end
 
+    trait :dependent do
+      person_types { ['DEP'] }
+    end
+
     trait :accountable do
       authn_context { LOA::IDME_LOA3_VETS }
       uuid { '9d018700-b72c-444a-95b4-43e14a4509ea' }
@@ -274,6 +278,10 @@ FactoryBot.define do
       gender { 'F' }
       last_signed_in { Time.zone.parse('2017-12-07T00:55:09Z') }
       ssn { '796068949' }
+
+      transient do
+        multifactor { true }
+      end
 
       after(:build) do
         stub_mpi(build(:mvi_profile, birls_id: '796068948'))
