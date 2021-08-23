@@ -96,7 +96,7 @@ module BGS
       if REMOVE_CHILD_OPTIONS.any? { |child_option| selectable_options[child_option] }
         # find which one of the remove child options is selected, and set the reject reason for that option
         selectable_options.each do |remove_option, is_selected|
-          return reject_claim(remove_option) if is_selected
+          return reject_claim(remove_option) if REMOVE_CHILD_OPTIONS.any?(remove_option) && is_selected
         end
       end
 
