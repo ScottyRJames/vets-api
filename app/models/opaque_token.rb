@@ -18,7 +18,6 @@ class OpaqueToken
 
   def set_payload(payload)
     @payload = payload
-    @payload['scp'] = @payload['scopes'] if @payload['scopes']
   end
 
   def client_credentials_token?

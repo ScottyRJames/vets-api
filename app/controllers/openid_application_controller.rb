@@ -215,6 +215,10 @@ class OpenidApplicationController < ApplicationController
 
     if response.code == 200
       json_response = JSON.parse(response.body)
+      if json_response['scopes']
+        json_response['scp'] = json_response['scopes']
+        json_response['scopes'] = nil
+      end
       json_response
     end
   rescue => e
