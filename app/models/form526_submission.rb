@@ -316,7 +316,7 @@ class Form526Submission < ApplicationRecord
 
   def submit_flashes
     user = User.find(user_uuid)
-    BGS::FlashUpdater.perform_async(id) if user &&  Flipper.enabled?(:disability_compensation_flashes, user)
+    BGS::FlashUpdater.perform_async(id) if user && Flipper.enabled?(:disability_compensation_flashes, user)
   end
 
   def cleanup

@@ -439,6 +439,7 @@ RSpec.describe Form526Submission do
       let(:form_json) do
         File.read('spec/support/disability_compensation_form/submissions/with_uploads.json')
       end
+
       context 'when feature enabled' do
         before { Flipper.enable(:disability_compensation_flashes) }
 
@@ -448,6 +449,7 @@ RSpec.describe Form526Submission do
           end.to change(BGS::FlashUpdater.jobs, :size).by(1)
         end
       end
+
       context 'when feature disabled' do
         before { Flipper.disable(:disability_compensation_flashes) }
 

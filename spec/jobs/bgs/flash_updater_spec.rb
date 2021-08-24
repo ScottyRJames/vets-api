@@ -4,15 +4,16 @@ require 'rails_helper'
 
 RSpec.describe BGS::FlashUpdater, type: :job do
   subject { described_class }
+
   let(:user) { FactoryBot.create(:evss_user, :loa3) } # ssn 796043735
-  let(:submission) {  create(:form526_submission, :with_uploads, user_uuid: user.uuid) }
-  let(:ssn) {submission.auth_headers['va_eauth_pnid']}
+  let(:submission) { create(:form526_submission, :with_uploads, user_uuid: user.uuid) }
+  let(:ssn) { submission.auth_headers['va_eauth_pnid'] }
   let(:flashes) { %w[Homeless POW] }
   let(:assigned_flashes) do
     { flashes: flashes.map { |flash| { assigned_indicator: nil, flash_name: flash, flash_type: nil } } }
   end
 
-   it 'submits successfully with claim id' do
+  it 'submits successfully with claim id' do
     expect do
       subject.perform_async(submission.id)
     end.to change(subject.jobs, :size).by(1)
