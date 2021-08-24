@@ -100,6 +100,7 @@ module OpenidAuth
         if (token.payload['scp'].include?('launch') ||
             token.payload['scp'].include?('launch/patient')) && !token.payload[:launch].nil?
           payload_object.launch = token.payload[:launch]
+          act[:icn] = payload_object.icn if payload_object.icn
         end
         payload_object
       end

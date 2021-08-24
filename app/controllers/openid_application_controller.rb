@@ -36,7 +36,7 @@ class OpenidApplicationController < ApplicationController
     return false if token.blank?
 
     # Static token gets a pass
-    return true if token.payload && token.payload['static']
+    return true if token.static?
 
     # For now opaque tokens are static
     return false if token.opaque?
