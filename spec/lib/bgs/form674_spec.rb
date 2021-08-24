@@ -41,7 +41,7 @@ RSpec.describe BGS::Form674 do
         expect_any_instance_of(BID::Awards::Service).to receive(:get_awards_pension).and_call_original
         expect_any_instance_of(BGS::Service).to receive(:create_note).with(
           '600209223',
-          'Claim rejected by VA.gov: This application needs manual review because a 674 was submitted.'
+          'Claim set to manual by VA.gov: This application needs manual review because a 674 was submitted.'
         )
 
         BGS::Form674.new(user_object).submit(all_flows_payload)

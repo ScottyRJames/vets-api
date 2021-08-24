@@ -158,7 +158,7 @@ module BGS
     end
 
     def reject_claim(reason_code)
-      @note_text = 'Claim rejected by VA.gov: This application needs manual review because a 686 was submitted '
+      @note_text = 'Claim set to manual by VA.gov: This application needs manual review because a 686 was submitted '
 
       case reason_code
       when 'report_death'
