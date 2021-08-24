@@ -80,8 +80,7 @@ class Token
     payload && payload['static']
   end
 
-
-    def identifiers
+  def identifiers
     # Here the `sub` field is the same value as the `login` field from the okta profile.
     # In cases of direct saml-proxy integration with the IDP, the `sub` is
     # the same value as the `uuid` field from the original upstream ID.me
