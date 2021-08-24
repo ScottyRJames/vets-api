@@ -29,6 +29,10 @@ class OpaqueToken
   end
 
   def static?
-    payload['static']
+    payload && payload['static']
+  end
+
+  def aud
+    @aud
   end
 end

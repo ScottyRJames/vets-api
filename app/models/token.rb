@@ -35,7 +35,7 @@ class Token
       StatsD.increment('okta_kid_lookup_failure', 1, tags: ["kid:#{kid}"])
       Rails.logger.info('Public key not found', kid: kid, exp: decoded_token[0]['exp'])
       raise error_klass("Public key not found for kid specified in token: '#{kid}'")
-    end
+    endƒis
 
     key
   rescue JWT::DecodeError => e
@@ -76,7 +76,12 @@ class Token
     payload['last_login_type'] == 'ssoi'
   end
 
-  def identifiers
+  def static?
+    payload && payload['static']
+  end
+
+
+    def identifiers
     # Here the `sub` field is the same value as the `login` field from the okta profile.
     # In cases of direct saml-proxy integration with the IDP, the `sub` is
     # the same value as the `uuid` field from the original upstream ID.me
