@@ -6,7 +6,7 @@ class Token
   def initialize(token_string, aud)
     @token_string = token_string
     @aud = aud
-    payload
+    validate_token
   end
 
   def to_s
@@ -17,7 +17,7 @@ class Token
     @payload ||= if @token_string
                    pubkey = public_key
 
-                   JWT.decode(@token_string, pubkey, false, algorithm: 'RS256')[0]
+                   JWT.decode(@token_string, pubkey, true, algorithm: 'RS256')[0]
                  end
   rescue JWT::ExpiredSignature => e
     Rails.logger.info(e.message, token: @token_string)
@@ -35,7 +35,7 @@ class Token
       StatsD.increment('okta_kid_lookup_failure', 1, tags: ["kid:#{kid}"])
       Rails.logger.info('Public key not found', kid: kid, exp: decoded_token[0]['exp'])
       raise error_klass("Public key not found for kid specified in token: '#{kid}'")
-    endƒis
+    end
 
     key
   rescue JWT::DecodeError => e
