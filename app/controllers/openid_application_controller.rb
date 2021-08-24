@@ -36,7 +36,10 @@ class OpenidApplicationController < ApplicationController
     return false if token.blank?
 
     # Static token gets a pass
-    return true if token.payload['static']
+    return true if token.payload && token.payload['static']
+
+    # For now opaque tokens are static
+    return false if token.opaque?
 
     # Only want to fetch the Okta profile if the session isn't already established and not a CC token
     @session = Session.find(hash_token(token)) unless token.client_credentials_token?

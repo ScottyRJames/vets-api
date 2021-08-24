@@ -12,6 +12,10 @@ class OpaqueToken
     @token_string
   end
 
+  def opaque?
+    true
+  end
+
   def set_payload(payload)
     @payload = payload
   end

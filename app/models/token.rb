@@ -68,6 +68,10 @@ class Token
     payload['sub'] == payload['cid']
   end
 
+  def opaque?
+    false
+  end
+
   def ssoi_token?
     payload['last_login_type'] == 'ssoi'
   end
