@@ -18,12 +18,14 @@ properties:
       - comment
       - clinicId
       - facilityId
+      - healthcareProvider
       - healthcareService
       - location
       - minutesDuration
       - startDateLocal
       - startDateUtc
       - status
+      - statusDetail
       - timeZone
       - vetextId
     properties:
