@@ -106,6 +106,13 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
     ]
   end
 
+  let(:issued_static_response) do
+    instance_double(RestClient::Response,
+                    code: 200,
+                    body: { static: true, aud: 'https://example.com/xxxxxxservices/xxxxx', icn: '1234678',
+                            scopes: 'launch launch/patient' }.to_json)
+  end
+
   let(:launch_response) do
     instance_double(RestClient::Response,
                     code: 200,
@@ -597,6 +604,17 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
           .to eq(json_api_response_vista_id['data']['attributes'].keys)
         expect(JSON.parse(response.body)['data']['attributes']['launch']['sta3n']).to eq('456')
       end
+    end
+  end
+
+  context 'static token from issued' do
+    it 'static token from ussued ok' do
+      allow(RestClient).to receive(:get).and_return(issued_static_response)
+
+      post '/internal/auth/v2/validation',
+           params: { aud: %w[https://example.com/xxxxxxservices/xxxxx] },
+           headers: auth_header
+      expect(response).to have_http_status(:ok)
     end
   end
 end
