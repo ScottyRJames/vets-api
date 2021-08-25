@@ -67,7 +67,11 @@ module OpenidAuth
       def validated_payload
         # Ensure the token has `act` and `launch` keys.
         payload_object = setup_structure
-        return payload_object if token.static?
+        if token.static?
+          payload_object.act[:icn] = payload_object.icn if payload_object.icn
+          payload_object.launch[:patient] = nil
+          return payload_object
+        end
 
         if token.ssoi_token?
           payload_object = populate_act_payload(payload_object)
@@ -100,7 +104,6 @@ module OpenidAuth
         if (token.payload['scp'].include?('launch') ||
             token.payload['scp'].include?('launch/patient')) && !token.payload[:launch].nil?
           payload_object.launch = token.payload[:launch]
-          act[:icn] = payload_object.icn if payload_object.icn
         end
         payload_object
       end
