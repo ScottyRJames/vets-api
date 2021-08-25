@@ -25,7 +25,8 @@ module AppealsApi
           status: :unprocessable_entity,
           json: {
             errors: [
-              { status: 422,
+              {
+                status: 422,
                 detail: 'Invalid characters in headers/body.',
                 meta: { pattern: OUTSIDE_WINDOWS_1252_PATTERN.inspect }
               }
