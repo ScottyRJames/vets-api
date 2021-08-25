@@ -49,6 +49,7 @@ module Mobile
             comment: appointment_hash[:instructions_to_veteran],
             facility_id: nil,
             sta6aid: nil,
+            healthcare_provider: healthcare_provider(appointment_hash[:name]),
             healthcare_service: appointment_hash[:provider_practice],
             location: location,
             minutes_duration: 60, # not in raw data, matches va.gov default for cc appointments
@@ -59,6 +60,12 @@ module Mobile
             time_zone: time_zone,
             vetext_id: nil
           }
+        end
+
+        def healthcare_provider(name_hash)
+          return nil if name_hash.nil? || name_hash.values.all?(&:blank?)
+
+          name_hash.values.join(' ').strip
         end
 
         def location(name, address, phone)
