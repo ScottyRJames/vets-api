@@ -2,8 +2,10 @@
 
 class TokenUtil
   def self.validate_token(token)
-    raise TokenUtil.error_klass('Invalid issuer') unless valid_issuer?(token)
-    raise TokenUtil.error_klass('Invalid audience') unless valid_audience?(token)
+    raise TokenUtil.error_klass('Invalid issuer') if !token.static? && !TokenUtil.valid_issuer?(token)
+    raise TokenUtil.error_klass('Invalid audience') unless TokenUtil.valid_audience?(token)
+
+    true
   end
 
   def self.valid_audience?(token)
@@ -11,7 +13,7 @@ class TokenUtil
       token.payload['aud'] == Settings.oidc.isolated_audience.default
     else
       # Temorarily accept the default audience or the API specificed audience
-      [Settings.oidc.isolated_audience.default, *token.aud].include?(payload['aud'])
+      [Settings.oidc.isolated_audience.default, *token.aud].include?(token.payload['aud'])
     end
   end
 
