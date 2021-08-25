@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Token
-  attr_reader :token_string
+  attr_reader :token_string, :aud
 
   def initialize(token_string, aud)
     @token_string = token_string

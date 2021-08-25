@@ -95,7 +95,8 @@ class OpenidApplicationController < ApplicationController
   def handle_opaque_token(token_string, aud)
     opaque_token = OpaqueToken.new(token_string, aud)
     opaque_token.set_payload(fetch_issued(token_string))
-    opaque_token
+
+    opaque_token if TokenUtil.validate_token(opaque_token)
   end
 
   def populate_ssoi_token_payload(profile)

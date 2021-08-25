@@ -20,6 +20,10 @@ class OpaqueToken
     @payload = payload
   end
 
+  def set_aud(aud)
+    @aud = aud
+  end
+
   def client_credentials_token?
     false
   end
