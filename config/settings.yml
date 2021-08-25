@@ -1,4 +1,5 @@
 hostname: 127.0.0.1:3000 # possible fallback for unsafe request.host
+
 vsp_environment:
 
 virtual_hosts: ["127.0.0.1", "localhost"] # Safe host names
@@ -61,7 +62,9 @@ test_database_url: postgis:///vets-api-test
 
 relative_url_root: /
 
-secret_key_base: 8af0fe1e378586520e4324694897eb269bd0fffa1c5be6cc3b4ffb9dbde095d0bef5c7fdab73cd05685d8fe1dd589287d78b38e4de7116fbe14461e414072677
+# This is a fake secret key base... not used in any envs
+secret_key_base: c1a13acb916e6ebf1d2a93a3924586520508b609e80e048364902cd36ab602c9ec6ddcb47ac66e7903dbc77ae876df5564658a4f786b50497440b0c7dc029361
+old_secret_key_base: 8af0fe1e378586520e4324694897eb269bd0fffa1c5be6cc3b4ffb9dbde095d0bef5c7fdab73cd05685d8fe1dd589287d78b38e4de7116fbe14461e414072677
 
 dmc:
   client_id: "0be3d60e3983438199f192b6e723a6f0"
@@ -70,6 +73,13 @@ dmc:
   mock_fsr: false
   url: https://internal-dsva-vagov-dev-fwdproxy-1893365470.us-gov-west-1.elb.amazonaws.com:4465/api/v1/digital-services/
   debts_endpoint: debt-letter/get
+
+mcp:
+  vbs:
+    url: https://fake_url.com:9000
+    host: fake_url.com
+    service_name: VBS
+    mock: true
 
 fsr:
   prefill: true
@@ -99,6 +109,9 @@ form_10_10cg:
       bucket: my-bucket
       enabled: true
       region: us-gov-west-1
+
+vbs:
+  url: https://vbs.example.com/api/v1
 
 # Settings for Education Benefits
 edu:
@@ -419,7 +432,10 @@ caseflow:
   mock: true
   app_token: PUBLICDEMO123
   host: https://dsva-appeals-certification-dev-1895622301.us-gov-west-1.elb.amazonaws.com
-  timeout: 60
+  timeout: 119
+  # The forwardproxy timeout is 2m so I want something slightly less than that so we don't get the forwardproxy's html
+  # response when we're expecting JSON.  Ideally, caseflow would respond quicker but they're still giving good responses
+  # in over a minute.
 
 vic:
   url: https://some.fakesite.com
@@ -436,8 +452,13 @@ preneeds:
   host: http://some.fakesite.com
   wsdl: "config/preneeds/wsdl/preneeds.wsdl"
 
+webhooks:
+  require_https: true
+
 # Settings for VBA Document upload service module
 vba_documents:
+  documentation:
+    path_enabled_flag: false
   report_enabled: false
   monthly_report: false
   location:
@@ -453,6 +474,19 @@ vba_documents:
     topic_arns:
       - vetsgov-arn
       - vagov-arn
+  slack:
+    enabled: false
+    default_alert_url:
+    invalid_parts_alert_url:
+    deployment_notification_benefits_url:
+    deployment_notification_forms_url:
+    in_flight_notification_hung_time_in_days: 14
+    renotification_in_minutes: 240
+    update_stalled_notification_in_minutes: 180
+    daily_notification_hour: 7
+  webhooks:
+    registration_next_run_in_minutes: 15
+    registration_max_retries: 3
 
 #Settings for Claims Api Module
 claims_api:
@@ -679,7 +713,7 @@ betamocks:
 search:
   access_key: SEARCH_GOV_ACCESS_KEY
   affiliate: va
-  mock_search: true
+  mock_search: false
   url: https://search.usa.gov/api/v2
 
 # Settings for search-typeahead
@@ -702,12 +736,15 @@ flipper:
     - alastair@adhocteam.us
     - anna@adhoc.team
     - bill.ryan@adhocteam.us
+    - clark@governmentcio.com # Designer on GCIO
     - cameron@oddball.io
     - cory.trimm@va.gov
-    - cwheeler@governmentcio.com
+    - craig.wheeler@gcio.com
     - dan.hinze@adhocteam.us
+    - dat.tran@gcio.com
     - delli-gatti_michael@bah.com
     - devinmccurdy@gmail.com
+    - dnalbach@governmentcio.com
     - draju@governmentcio.com
     - dror@matal.com
     - elder_joseph@bah.com
@@ -715,10 +752,12 @@ flipper:
     - erik@adhocteam.us
     - filip.fafara@gmail.com
     - fahmed@governmentcio.com
+    - gescobar@governmentcio.com
     - grodriguez@governmentcio.com
     - hshin@thoughtworks.com
     - jacob.gacek@thoughtworks.com
     - jbalboni@gmail.com
+    - james.adams2@va.gov # Jim Adams designer on GCIO
     - jeff@adhocteam.us
     - jennie.mcgibney@va.gov
     - jesse.cohn@adhocteam.us
@@ -729,8 +768,10 @@ flipper:
     - kabrown@thoughtworks.com
     - kadams@governmentcio.com
     - kam@adhocteam.us
+    - kathleen.crawford@gcio.com
     - kenneth.gary@va.gov
     - kenneth.santiago2010@gmail.com
+    - kevin.musiorski@gcio.com # Kevin Musiorski (GCIO), Engineer
     - kmircovich@governmentcio.com
     - lauren.alexanderson@va.gov
     - lauren.ernest@adhocteam.us
@@ -743,8 +784,10 @@ flipper:
     - mccurdy_devin@bah.com
     - mdewey@governmentcio.com
     - micah@adhocteam.us
+    - michel.mcdonald@adhocteam.us
     - michael.chelen@va.gov
     - michael.fleet@oddball.io
+    - michael.pelz-sherman@gcio.com
     - mnunemak@thoughtworks.com
     - n.ratana@gmail.com
     - narin@adhocteam.us
@@ -756,6 +799,7 @@ flipper:
     - regarr@gmail.com # Robin Garrison - AdHoc
     - riley.anderson@oddball.io
     - roth_matthew@bah.com
+    - ryan.leahy@adhocteam.us # Ryan Leahy - Adhoc
     - ryan.thurlwell@va.gov
     - saman.moshafi@thoughtworks.com
     - samara.strauss@va.gov
@@ -772,7 +816,8 @@ flipper:
     - tze@adhocteam.us
     - zurbergram@gmail.com
     - zmorel@governmentcio.com
-    - zachary.morel@gcio.com
+    - kha.huynh@thoughtworks.com
+    - zach.morel@gcio.com
 
 bgs:
   application: ~
@@ -1034,3 +1079,30 @@ github_cvu:
 pg_hero:
   username: ~
   password: ~
+
+check_in:
+  chip_api:
+    url: https://vpce-06399548ef94bdb41-lk4qp2nd.execute-api.us-gov-west-1.vpce.amazonaws.com
+    base_path: dev
+    host: vpce-06399548ef94bdb41-lk4qp2nd.execute-api.us-gov-west-1.vpce.amazonaws.com
+    tmp_api_user: TzY6DFrnjPE8dwxUMbFf9HjbFqRim2MgXpMpMciXJFVohyURUJAc7W99rpFzhfh2B3sVnn4
+    tmp_api_id: 2dcdrrn5zc
+    tmp_api_username: vetsapiTempUser
+    mock: false
+    key_path: ~
+    redis_session_prefix: check_in
+    timeout: 30
+
+rack:
+  cookie_secret: ~
+
+# Settings for BID Services
+bid:
+  awards:
+    base_url: ~
+    credentials: ~
+    mock: true
+
+# Settings for Test User Dashboard modules
+test_user_dashboard:
+  env: dev

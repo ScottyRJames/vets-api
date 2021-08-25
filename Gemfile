@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-ruby '2.6.6'
+ruby '~> 2.6.6'
 
 # temp fix for security vulnerability, hopefulle we can remove this line with the next rails patch
 # https://blog.jcoglan.com/2020/06/02/redos-vulnerability-in-websocket-extensions/
@@ -35,9 +35,9 @@ end
 gem 'sass-rails', '>= 6'
 
 # Anchored versions, do not change
-gem 'puma', '~> 5.3.2'
-gem 'puma-plugin-statsd', '~> 1.2.1'
-gem 'rails', '~> 6.1.3'
+gem 'puma', '~> 5.4.0'
+gem 'puma-plugin-statsd', '~> 2.0.0'
+gem 'rails', '~> 6.1'
 
 # Gems with special version/repo needs
 gem 'active_model_serializers', git: 'https://github.com/department-of-veterans-affairs/active_model_serializers', branch: 'master'
@@ -52,6 +52,7 @@ gem 'aws-sdk-s3', '~> 1'
 gem 'aws-sdk-sns', '~> 1'
 gem 'betamocks', git: 'https://github.com/department-of-veterans-affairs/betamocks', branch: 'master'
 gem 'bgs_ext', git: 'https://github.com/department-of-veterans-affairs/bgs-ext.git', require: 'bgs'
+gem 'blueprinter'
 gem 'breakers'
 gem 'bootsnap', require: false
 gem 'carrierwave'
@@ -67,11 +68,11 @@ gem 'faraday'
 gem 'faraday_middleware'
 gem 'fast_jsonapi'
 gem 'fastimage'
-gem 'fhir_client', '~> 4.0.6'
-gem 'flipper', '~> 0.20.4'
-gem 'flipper-active_record', '~> 0.20.4'
-gem 'flipper-active_support_cache_store', '~> 0.20.4'
-gem 'flipper-ui', '~> 0.20.4'
+gem 'fhir_client', '~> 5.0.0'
+gem 'flipper', '~> 0.21.0'
+gem 'flipper-active_record', '~> 0.21.0'
+gem 'flipper-active_support_cache_store', '~> 0.21.0'
+gem 'flipper-ui', '~> 0.21.0'
 gem 'foreman'
 gem 'google-api-client'
 gem 'google-apis-core'
@@ -95,7 +96,7 @@ gem 'memoist'
 gem 'mimemagic', '~> 0.4.3'
 gem 'mini_magick', '~> 4.11.0'
 gem 'net-sftp'
-gem 'nokogiri', '~> 1.11'
+gem 'nokogiri', '~> 1.12'
 gem 'notifications-ruby-client', '~> 5.3'
 gem 'octokit'
 gem 'oj' # Amazon Linux `json` gem causes conflicts, but `multi_json` will prefer `oj` if installed
@@ -132,13 +133,14 @@ gem 'sentry-raven'
 gem 'shrine'
 gem 'slack-notify'
 gem 'staccato'
-gem 'statsd-instrument', '~> 2.6.0' # versions beyond 2.6 deprecate config and change logging messages
+gem 'statsd-instrument', '~> 3.1.0'
 gem 'strong_migrations'
 gem 'swagger-blocks'
 gem 'typhoeus'
 gem 'utf8-cleaner'
 gem 'vets_json_schema', git: 'https://github.com/department-of-veterans-affairs/vets-json-schema', branch: 'master'
 gem 'virtus'
+gem 'warden-github'
 gem 'will_paginate'
 gem 'with_advisory_lock'
 
@@ -172,7 +174,6 @@ group :test do
   gem 'webrick', '>= 1.6.1'
 end
 
-# rubocop:disable Metrics/BlockLength
 group :development, :test do
   gem 'awesome_print', '~> 1.9' # Pretty print your Ruby objects in full color and with proper indentation
   gem 'brakeman', '~> 5.0'
@@ -207,8 +208,6 @@ group :development, :test do
   gem 'webmock'
   gem 'yard'
 end
-# rubocop:enable Metrics/BlockLength
-
 # sidekiq enterprise requires a license key to download. In many cases, basic sidekiq is enough for local development
 if (Bundler::Settings.new(Bundler.app_config_path)['enterprise.contribsys.com'].nil? ||
     Bundler::Settings.new(Bundler.app_config_path)['enterprise.contribsys.com']&.empty?) &&

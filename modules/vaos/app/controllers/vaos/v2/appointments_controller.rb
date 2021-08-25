@@ -6,20 +6,28 @@ module VAOS
   module V2
     class AppointmentsController < VAOS::V0::BaseController
       def index
-        render json: VAOS::V2::AppointmentsSerializer.new(appointments[:data], meta: appointments[:meta])
+        serializer = VAOS::V2::VAOSSerializer.new
+        serialized = serializer.serialize(appointments[:data], 'appointments')
+        render json: { data: serialized }
       end
 
       def show
-        render json: VAOS::V2::AppointmentsSerializer.new(appointment)
+        serializer = VAOS::V2::VAOSSerializer.new
+        serialized = serializer.serialize(appointment, 'appointments')
+        render json: { data: serialized }
       end
 
       def create
-        render json: VAOS::V2::AppointmentsSerializer.new(new_appointment), status: :created
+        serializer = VAOS::V2::VAOSSerializer.new
+        serialized = serializer.serialize(new_appointment, 'appointments')
+        render json: { data: serialized }, status: :created
       end
 
-      def update
-        resp_appointment = appointments_service.update_appointment(appt_id: appt_id, status: status_update)
-        render json: VAOS::V2::AppointmentsSerializer.new(resp_appointment)
+      def cancel
+        resp = appointments_service.cancel_appointment(appt_id: appt_id, reason: cancellation_reason)
+        serializer = VAOS::V2::VAOSSerializer.new
+        serialized = serializer.serialize(resp, 'appointments')
+        render json: { data: serialized }
       end
 
       private
@@ -42,8 +50,8 @@ module VAOS
         params.require(:id)
       end
 
-      def status_update
-        params.require(:status)
+      def cancellation_reason
+        params.require(:reason)
       end
 
       def new_appointment
@@ -64,9 +72,11 @@ module VAOS
                       :clinic,
                       :reason,
                       :service_type,
+                      :preferred_language,
                       slot: %i[id start end],
                       contact: [telecom: %i[type value]],
-                      requested_periods: %i[start end])
+                      requested_periods: %i[start end],
+                      practitioner_ids: %i[system value])
       end
 
       def start_date

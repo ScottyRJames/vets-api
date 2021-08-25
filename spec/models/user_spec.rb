@@ -125,6 +125,45 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe '#person_types' do
+    let(:user) { build(:user, person_types: identity_person_types) }
+    let(:mpi_profile) { build(:mvi_profile, person_types: mpi_person_types) }
+    let(:identity_person_types) { ['some_identity_person_types'] }
+    let(:mpi_person_types) { 'some_mpi_person_types' }
+
+    before do
+      allow(user).to receive(:mpi).and_return(mpi_profile)
+    end
+
+    context 'when person_types on User Identity exists' do
+      let(:identity_person_types) { ['some_identity_person_types'] }
+
+      it 'returns person_types off the User Identity' do
+        expect(user.person_types).to eq(identity_person_types)
+      end
+    end
+
+    context 'when person_types on identity does not exist' do
+      let(:identity_person_types) { nil }
+
+      context 'and person_types on MPI Data exists' do
+        let(:mpi_person_types) { 'some_mpi_person_types' }
+
+        it 'returns person_types from the MPI Data' do
+          expect(user.person_types).to eq([mpi_person_types])
+        end
+      end
+
+      context 'and person_types on MPI Data does not exist' do
+        let(:mpi_person_types) { nil }
+
+        it 'returns an empty array' do
+          expect(user.person_types).to eq([])
+        end
+      end
+    end
+  end
+
   describe '#all_emails' do
     let(:user) { build(:user, :loa3) }
     let(:vet360_email) { user.vet360_contact_info.email.email_address }
@@ -308,6 +347,13 @@ RSpec.describe User, type: :model do
       end
     end
 
+    describe 'invalidate_mpi_cache' do
+      it 'clears the user mpi cache' do
+        expect_any_instance_of(MPIData).to receive(:destroy)
+        subject.invalidate_mpi_cache
+      end
+    end
+
     describe '#mpi_profile?' do
       context 'when user has mpi profile' do
         let(:mvi_profile) { build(:mvi_profile) }
@@ -369,6 +415,10 @@ RSpec.describe User, type: :model do
           expect(user.gender).to be(user.identity.gender)
         end
 
+        it 'fetches person_types from IDENTITY' do
+          expect(user.identity_person_types).to be(user.identity.person_types)
+        end
+
         it 'fetches properly parsed birth_date from IDENTITY' do
           expect(user.birth_date).to eq(Date.parse(user.identity.birth_date).iso8601)
         end
@@ -415,6 +465,10 @@ RSpec.describe User, type: :model do
           expect(user.last_name_mpi).to be(mvi_profile.family_name)
         end
 
+        it 'fetches person_types from MPI' do
+          expect(user.mpi_person_types).to be(mvi_profile.person_types)
+        end
+
         it 'fetches gender from MPI' do
           expect(user.gender_mpi).to be(mvi_profile.gender)
         end
@@ -441,6 +495,20 @@ RSpec.describe User, type: :model do
 
         it 'fetches suffix from MPI' do
           expect(user.suffix).to be(mvi_profile.suffix)
+        end
+      end
+
+      describe '#vha_facility_hash' do
+        let(:user) { build(:user, :loa3) }
+        let(:vha_facility_hash) { { '400' => %w[123456789 999888777] } }
+        let(:mvi_profile) { build(:mvi_profile, vha_facility_hash: vha_facility_hash) }
+
+        before do
+          stub_mpi(mvi_profile)
+        end
+
+        it 'returns the users vha_facility_hash' do
+          expect(user.vha_facility_hash).to eq(vha_facility_hash)
         end
       end
 
@@ -930,7 +998,7 @@ RSpec.describe User, type: :model do
               'state_of_birth' => 'DC'
             }
           end
-          let(:bgs_dependent_response) { { 'persons' => [bgs_dependent] } }
+          let(:bgs_dependent_response) { { persons: [bgs_dependent] } }
           let(:user_relationship_double) { double }
           let(:expected_user_relationship_array) { [user_relationship_double] }
 

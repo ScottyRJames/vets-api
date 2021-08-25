@@ -13,6 +13,10 @@ module AppealsApi
     include Sidekiq::Worker
     include Sidekiq::MonitoredWorker
     include CentralMail::Utilities
+    include AppealsApi::CharacterUtilities
+
+    # Retry for ~7 days
+    sidekiq_options retry: 20
 
     def perform(higher_level_review_id, version = 'V1')
       higher_level_review = AppealsApi::HigherLevelReview.find(higher_level_review_id)
@@ -32,7 +36,8 @@ module AppealsApi
     end
 
     def retry_limits_for_notification
-      [2, 5]
+      # Alert @ 1m, 10m, 30m, 4h, 1d, 3d, and 7d
+      [2, 5, 6, 10, 14, 17, 20]
     end
 
     def notify(retry_params)
@@ -43,8 +48,8 @@ module AppealsApi
 
     def upload_to_central_mail(higher_level_review, pdf_path)
       metadata = {
-        'veteranFirstName' => higher_level_review.first_name,
-        'veteranLastName' => higher_level_review.last_name,
+        'veteranFirstName' => transliterate_for_centralmail(higher_level_review.first_name),
+        'veteranLastName' => transliterate_for_centralmail(higher_level_review.last_name),
         'fileNumber' => higher_level_review.file_number.presence || higher_level_review.ssn,
         'zipCode' => higher_level_review.zip_code_5,
         'source' => "Appeals-HLR-#{higher_level_review.consumer_name}",
@@ -90,10 +95,10 @@ module AppealsApi
       higher_level_review.update(status: 'error', code: e.code, detail: e.detail)
 
       if e.code == 'DOC201' || e.code == 'DOC202'
-        AppealsApi::SidekiqRetryNotifier.notify!(
+        notify(
           {
             'class' => self.class.name,
-            'retry_count' => '-',
+            'args' => [higher_level_review.id],
             'error_class' => e.code,
             'error_message' => e.detail,
             'failed_at' => Time.zone.now

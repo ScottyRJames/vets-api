@@ -35,7 +35,7 @@ module VeteranVerification
     end
 
     def self.handle_errors!(emis)
-      raise_error! unless emis.service_history.is_a?(Array)
+      raise_error! unless emis&.service_history.is_a?(Array)
     end
 
     def self.raise_error!
@@ -45,21 +45,58 @@ module VeteranVerification
       )
     end
 
-    def self.episodes(emis, user)
-      emis.service_episodes_by_date.map do |episode|
+    def self.fetch_non_32_guard_periods(emis, user)
+      reserve_periods = emis.guard_reserve_service_periods
+      reserve_periods = reserve_periods.filter do |reserve_period|
+        !reserve_period.nil? \
+                && reserve_period.training_indicator_code != 'Y' \
+                && (%w[J N P Q Z].exclude? reserve_period.statute_code)
+      end
+
+      reserve_periods.map do |reserve_period|
+        ServiceHistoryEpisode.new(
+          id: episode_identifier(reserve_period, user),
+          first_name: user.first_name,
+          last_name: user.last_name,
+          branch_of_service: emis.get_guard_personnel_category_type(reserve_period),
+          end_date: reserve_period.end_date,
+          discharge_type: reserve_period.character_of_service_code,
+          start_date: reserve_period.begin_date,
+          separation_reason: reserve_period.narrative_reason_for_separation_txt
+        )
+      end
+    rescue Common::Client::Errors::HTTPError
+      []
+    end
+
+    def self.get_active_episodes(episodes, deployments, user, emis)
+      episodes.map do |episode|
+        deployments_for_episode, deployments = deployments.partition do |dep|
+          (dep.begin_date >= episode.begin_date) && (episode.end_date.nil? || dep.end_date <= episode.end_date)
+        end
         ServiceHistoryEpisode.new(
           id: episode_identifier(episode, user),
           first_name: user.first_name,
           last_name: user.last_name,
           branch_of_service: emis.build_service_branch(episode),
           end_date: episode.end_date,
-          deployments: deployments(emis, episode),
+          deployments: deployments(deployments_for_episode),
           discharge_type: episode.discharge_character_of_service_code,
           start_date: episode.begin_date,
           pay_grade: build_pay_grade(episode),
           separation_reason: episode.narrative_reason_for_separation_txt
         )
       end
+    end
+
+    def self.episodes(emis, user)
+      episodes = emis.service_episodes_by_begin_date.reverse
+      deployments = emis.deployments.sort_by { |ep| ep.begin_date || Time.zone.today + 3650 }.reverse
+      episodes = episodes.select do |episode|
+        episode.personnel_category_type_code == 'A'
+      end
+      service_histories = get_active_episodes(episodes, deployments, user, emis)
+      service_histories.concat(fetch_non_32_guard_periods(emis, user))
     end
 
     def self.episode_identifier(episode, user)
@@ -69,11 +106,7 @@ module VeteranVerification
       )
     end
 
-    def self.deployments(emis, episode)
-      deployments_for_episode = emis.deployments.select do |dep|
-        (dep.begin_date >= episode.begin_date) && (dep.end_date <= episode.end_date)
-      end
-
+    def self.deployments(deployments_for_episode)
       deployments_for_episode.map do |dep|
         {
           start_date: dep.begin_date,

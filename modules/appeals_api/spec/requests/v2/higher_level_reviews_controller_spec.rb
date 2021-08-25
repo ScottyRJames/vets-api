@@ -41,6 +41,36 @@ describe AppealsApi::V2::DecisionReviews::HigherLevelReviewsController, type: :r
         expect(response.status).to eq(422)
         expect(parsed['errors']).to be_an Array
       end
+
+      it 'fails when the phone number is too long' do
+        data = JSON.parse(@data)
+        data['data']['attributes']['veteran'].merge!(
+          { 'phone' => { 'areaCode' => '999', 'phoneNumber' => '1234567890', 'phoneNumberExt' => '1234567890' } }
+        )
+
+        post(path, params: data.to_json, headers: @minimum_required_headers)
+        expect(response.status).to eq(422)
+        expect(parsed['errors']).to include(
+          {
+            'status' => 422,
+            'detail' => 'Phone number will not fit on form (20 char limit): 9991234567890x1234567890'
+          }
+        )
+      end
+
+      it 'fails when homeless is false but no address is provided' do
+        data = JSON.parse(@data)
+        data['data']['attributes']['veteran']['homeless'] = false
+        data['data']['attributes']['veteran'].delete('address')
+
+        post(path, params: data.to_json, headers: @minimum_required_headers)
+        expect(response.status).to eq(422)
+
+        error = parsed['errors'][0]
+        expect(error['title']).to eq 'Missing required fields'
+        expect(error['code']).to eq '145'
+        expect(error['meta']['missing_fields']).to match_array(['address'])
+      end
     end
 
     it 'create the job to build the PDF' do

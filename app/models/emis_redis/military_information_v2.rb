@@ -148,6 +148,17 @@ module EMISRedis
 
       "#{branch} #{category}".strip
     end
+
+    def get_guard_personnel_category_type(guard_service_period)
+      case guard_service_period.personnel_category_type_code
+      when 'N'
+        'National Guard'
+      when 'V' || 'Q'
+        'Reserve'
+      else
+        ''
+      end
+    end
     # rubocop:enable Metrics/CyclomaticComplexity,  Lint/DuplicateBranch
 
     # @return [Array<Hash>] Data about the veteran's service periods
@@ -267,6 +278,14 @@ module EMISRedis
       end.call
     end
 
+    # @return [Array<EMIS::Models::MilitaryServiceEpisode>] Cached
+    #  array of veteran's military service episodes sorted by begin_date
+    def service_episodes_by_begin_date
+      @service_episodes_by_date ||= lambda do
+        military_service_episodes.sort_by { |ep| ep.begin_date || Time.zone.today + 3650 }
+      end.call
+    end
+
     # @return [Array<Hash>] Veteran's military service episodes sorted by date
     #  in hash format including data about branch of service, date range,
     #  and personnel category codes
@@ -279,6 +298,12 @@ module EMISRedis
           personnel_category_type_code: episode.personnel_category_type_code
         }
       end
+    end
+
+    # @return [Array<EMIS::Models::GuardReserveServicePeriod>] Cached
+    #  array of veteran's Guard and reserve service periods
+    def guard_reserve_service_periods
+      @guard_reserve_service_periods ||= items_from_response('get_guard_reserve_service_periods')
     end
   end
 end

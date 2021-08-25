@@ -67,7 +67,7 @@ class User < Common::RedisStore
   # Identity getter methods
 
   def birls_id
-    identity&.birls_id || mpi&.birls_id
+    identity&.birls_id || mpi_birls_id
   end
 
   # Returns a Date string in iso8601 format, eg. '{year}-{month}-{day}'
@@ -142,12 +142,6 @@ class User < Common::RedisStore
 
   # MPI getter methods
 
-  def mpi_profile
-    return nil unless mpi
-
-    mpi.profile
-  end
-
   def active_mhv_ids
     mpi_profile&.active_mhv_ids
   end
@@ -218,6 +212,10 @@ class User < Common::RedisStore
     mpi_profile&.normalized_suffix
   end
 
+  def person_types
+    identity_person_types.presence || mpi_person_types
+  end
+
   def ssn_mpi
     mpi_profile&.ssn
   end
@@ -232,10 +230,28 @@ class User < Common::RedisStore
 
   # MPI setter methods
 
+  def mpi_add_person
+    add_person_identity = identity
+    add_person_identity.edipi = edipi
+    add_person_identity.ssn = ssn
+    add_person_identity.icn_with_aaid = icn_with_aaid
+    add_person_identity.search_token = search_token
+    mpi.user_identity = add_person_identity
+    mpi.add_person
+  end
+
   def set_mhv_ids(mhv_id)
     mpi_profile.mhv_ids = [mhv_id] + mhv_ids
     mpi_profile.active_mhv_ids = [mhv_id] + active_mhv_ids
     recache
+  end
+
+  # Other MPI
+
+  def invalidate_mpi_cache
+    mpi_cache = mpi
+    mpi_cache.mvi_response
+    mpi_cache.destroy
   end
 
   # identity attributes
@@ -244,18 +260,20 @@ class User < Common::RedisStore
   delegate :mhv_icn, to: :identity, allow_nil: true
   delegate :idme_uuid, to: :identity, allow_nil: true
   delegate :common_name, to: :identity, allow_nil: true
-  delegate :person_types, to: :identity, allow_nil: true
+  delegate :person_types, to: :identity, allow_nil: true, prefix: true
 
   # mpi attributes
+  delegate :birls_id, to: :mpi, prefix: true
+  delegate :cerner_id, to: :mpi
+  delegate :cerner_facility_ids, to: :mpi
   delegate :icn, to: :mpi, prefix: true
   delegate :icn_with_aaid, to: :mpi
   delegate :vet360_id, to: :mpi
   delegate :search_token, to: :mpi
+  delegate :person_types, to: :mpi, prefix: true
   delegate :id_theft_flag, to: :mpi
   delegate :status, to: :mpi, prefix: true
   delegate :error, to: :mpi, prefix: true
-  delegate :cerner_id, to: :mpi
-  delegate :cerner_facility_ids, to: :mpi
 
   # emis attributes
   delegate :military_person?, to: :veteran_status
@@ -283,11 +301,19 @@ class User < Common::RedisStore
   # User's profile contains a list of VHA facility-specific identifiers.
   # Facilities in the defined range are treating facilities
   def va_treatment_facility_ids
-    facilities = mpi_profile&.vha_facility_ids
-    facilities.to_a.select do |f|
+    facilities = vha_facility_ids
+    facilities.select do |f|
       Settings.mhv.facility_range.any? { |range| f.to_i.between?(*range) } ||
         Settings.mhv.facility_specific.include?(f)
     end
+  end
+
+  def vha_facility_ids
+    mpi_profile&.vha_facility_ids || []
+  end
+
+  def vha_facility_hash
+    mpi_profile&.vha_facility_hash || {}
   end
 
   def can_access_id_card?
@@ -379,10 +405,6 @@ class User < Common::RedisStore
     false
   end
 
-  def mpi
-    @mpi ||= MPIData.for_user(identity)
-  end
-
   # A user can have served in the military without being a veteran.  For example,
   # someone can be ex-military by having a discharge status higher than
   # 'Other Than Honorable'.
@@ -405,17 +427,17 @@ class User < Common::RedisStore
     @relationships ||= get_relationships_array
   end
 
-  def mpi_add_person
-    add_person_identity = identity
-    add_person_identity.edipi = edipi
-    add_person_identity.ssn = ssn
-    add_person_identity.icn_with_aaid = icn_with_aaid
-    add_person_identity.search_token = search_token
-    mpi.user_identity = add_person_identity
-    mpi.add_person
+  private
+
+  def mpi
+    @mpi ||= MPIData.for_user(identity)
   end
 
-  private
+  def mpi_profile
+    return nil unless mpi
+
+    mpi.profile
+  end
 
   def get_relationships_array
     return unless loa3?
@@ -431,9 +453,9 @@ class User < Common::RedisStore
 
   def bgs_relationships
     bgs_dependents = BGS::DependentService.new(self).get_dependents
-    return unless bgs_dependents.presence
+    return unless bgs_dependents.presence && bgs_dependents[:persons]
 
-    bgs_dependents['persons'].map { |dependent| UserRelationship.from_bgs_dependent(dependent) }
+    bgs_dependents[:persons].map { |dependent| UserRelationship.from_bgs_dependent(dependent) }
   end
 
   def pciu

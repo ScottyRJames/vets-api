@@ -261,6 +261,7 @@ RSpec.describe 'appointments', type: :request do
 
         let(:first_appointment) { response.parsed_body['data'].first['attributes'] }
         let(:last_appointment) { response.parsed_body['data'].last['attributes'] }
+        let(:cancelled_appointment) { response.parsed_body['data'][6]['attributes'] }
 
         it 'returns an ok response' do
           expect(response).to have_http_status(:ok)
@@ -272,6 +273,10 @@ RSpec.describe 'appointments', type: :request do
 
         it 'sorts the appointments by startDateUtc ascending' do
           expect(first_appointment['startDateUtc']).to be < last_appointment['startDateUtc']
+        end
+
+        it 'includes a status detail for cancelled appointments' do
+          expect(cancelled_appointment['statusDetail']).to eq('CANCELLED BY PATIENT')
         end
 
         it 'includes the expected properties for a VA appointment' do
@@ -306,6 +311,7 @@ RSpec.describe 'appointments', type: :request do
                 'startDateLocal' => '2020-11-03T09:00:00.000-07:00',
                 'startDateUtc' => '2020-11-03T16:00:00.000+00:00',
                 'status' => 'BOOKED',
+                'statusDetail' => nil,
                 'timeZone' => 'America/Denver',
                 'vetextId' => '308;20201103.090000'
               }
@@ -349,6 +355,7 @@ RSpec.describe 'appointments', type: :request do
                 'startDateLocal' => '2020-11-25T19:30:00.000-05:00',
                 'startDateUtc' => '2020-11-26T00:30:00.000Z',
                 'status' => 'BOOKED',
+                'statusDetail' => nil,
                 'timeZone' => 'America/New_York',
                 'vetextId' => nil
               }
@@ -417,6 +424,7 @@ RSpec.describe 'appointments', type: :request do
                 'startDateLocal' => '2020-11-03T09:00:00.000-07:00',
                 'startDateUtc' => '2020-11-03T16:00:00.000+00:00',
                 'status' => 'BOOKED',
+                'statusDetail' => nil,
                 'timeZone' => 'America/Denver',
                 'vetextId' => '308;20201103.090000'
               }
@@ -460,6 +468,7 @@ RSpec.describe 'appointments', type: :request do
                 'startDateLocal' => '2020-11-25T19:30:00.000-05:00',
                 'startDateUtc' => '2020-11-26T00:30:00.000Z',
                 'status' => 'BOOKED',
+                'statusDetail' => nil,
                 'timeZone' => 'America/New_York',
                 'vetextId' => nil
               }
@@ -479,16 +488,12 @@ RSpec.describe 'appointments', type: :request do
           end
         end
 
-        it 'returns an ok response' do
-          expect(response).to have_http_status(:ok)
-        end
-
-        it 'has va appointments' do
-          expect(response.parsed_body['data'].size).to eq(3)
+        it 'returns a 502 response' do
+          expect(response).to have_http_status(:bad_gateway)
         end
 
         it 'matches the expected schema' do
-          expect(response.body).to match_json_schema('appointments')
+          expect(response.body).to match_json_schema('errors')
         end
       end
 
@@ -501,16 +506,12 @@ RSpec.describe 'appointments', type: :request do
           end
         end
 
-        it 'returns an ok response' do
-          expect(response).to have_http_status(:ok)
-        end
-
-        it 'has va appointments' do
-          expect(response.parsed_body['data'].size).to eq(7)
+        it 'returns a 502 response' do
+          expect(response).to have_http_status(:bad_gateway)
         end
 
         it 'matches the expected schema' do
-          expect(response.body).to match_json_schema('appointments')
+          expect(response.body).to match_json_schema('errors')
         end
       end
 
@@ -537,12 +538,12 @@ RSpec.describe 'appointments', type: :request do
           end
         end
 
-        it 'returns a 200 response' do
-          expect(response).to have_http_status(:ok)
+        it 'returns a 502 response' do
+          expect(response).to have_http_status(:bad_gateway)
         end
 
-        it 'has the right CC count' do
-          expect(response.parsed_body['data'].size).to eq(7)
+        it 'matches the expected schema' do
+          expect(response.body).to match_json_schema('errors')
         end
       end
     end
@@ -607,6 +608,99 @@ RSpec.describe 'appointments', type: :request do
             },
             'url' => nil,
             'code' => nil
+          }
+        )
+      end
+    end
+
+    context "when a VA appointment's facility does not have a phone number" do
+      before do
+        Timecop.freeze(Time.zone.parse('2020-11-01T10:30:00Z'))
+
+        VCR.use_cassette('appointments/get_facilities_phone_bug', match_requests_on: %i[method uri]) do
+          VCR.use_cassette('appointments/get_cc_appointments_address_bug', match_requests_on: %i[method uri]) do
+            VCR.use_cassette('appointments/get_appointments_address_bug', match_requests_on: %i[method uri]) do
+              get '/mobile/v0/appointments', headers: iam_headers, params: nil
+            end
+          end
+        end
+      end
+
+      after { Timecop.return }
+
+      let(:location) { response.parsed_body['data'].first.dig('attributes', 'location') }
+
+      it 'correctly parses the phone number as nil' do
+        expect(location).to eq(
+          {
+            'name' => 'Cheyenne VA Medical Center',
+            'address' => {
+              'street' => '2360 East Pershing Boulevard',
+              'city' => 'Cheyenne',
+              'state' => 'WY',
+              'zipCode' => '82001-5356'
+            },
+            'lat' => 41.148027,
+            'long' => -104.7862575,
+            'phone' => nil,
+            'url' => nil,
+            'code' => nil
+          }
+        )
+      end
+    end
+
+    context "when a VA appointment's facility phone number is malformed" do
+      before do
+        allow(Rails.logger).to receive(:warn)
+        Timecop.freeze(Time.zone.parse('2020-11-01T10:30:00Z'))
+
+        VCR.use_cassette('appointments/get_facilities_phone_bug', match_requests_on: %i[method uri]) do
+          VCR.use_cassette('appointments/get_cc_appointments_address_bug', match_requests_on: %i[method uri]) do
+            VCR.use_cassette('appointments/get_appointments_address_bug', match_requests_on: %i[method uri]) do
+              get '/mobile/v0/appointments', headers: iam_headers, params: nil
+            end
+          end
+        end
+      end
+
+      after { Timecop.return }
+
+      let(:location) { response.parsed_body['data'][1].dig('attributes', 'location') }
+
+      it 'correctly parses the phone number as nil' do
+        expect(location).to eq(
+          {
+            'name' => 'Cheyenne VA Medical Center',
+            'address' => {
+              'street' => '2360 East Pershing Boulevard',
+              'city' => 'Cheyenne',
+              'state' => 'WY',
+              'zipCode' => '82001-5356'
+            },
+            'lat' => 41.148027,
+            'long' => -104.7862575,
+            'phone' => nil,
+            'url' => nil,
+            'code' => nil
+          }
+        )
+      end
+
+      it 'logs the facility phone number' do
+        expect(Rails.logger).to have_received(:warn).at_least(:once).with(
+          'mobile appointments failed to parse facility phone number',
+          {
+            facility_id: 'vha_442GC',
+            facility_phone: {
+              'fax' => '970-407-7440',
+              'main' => '970224-1550',
+              'pharmacy' => '866-420-6337',
+              'afterHours' => '307-778-7550',
+              'patientAdvocate' => '307-778-7550 x7517',
+              'mentalHealthClinic' => '307-778-7349',
+              'enrollmentCoordinator' => '307-778-7550 x7579'
+            }
           }
         )
       end

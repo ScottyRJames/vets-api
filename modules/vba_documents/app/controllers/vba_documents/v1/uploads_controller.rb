@@ -18,7 +18,8 @@ module VBADocuments
           consumer_name: request.headers['X-Consumer-Username'],
           consumer_id: request.headers['X-Consumer-ID']
         )
-
+        submission.metadata['version'] = 1
+        submission.save!
         render status: :accepted,
                json: submission,
                serializer: VBADocuments::V1::UploadSerializer,
@@ -44,6 +45,7 @@ module VBADocuments
 
       def download
         submission = VBADocuments::UploadSubmission.find_by(guid: params[:upload_id])
+        raise Common::Exceptions::RecordNotFound, params[:upload_id] if submission.nil?
 
         zip_file_name = VBADocuments::PayloadManager.zip(submission)
 

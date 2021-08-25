@@ -5,7 +5,7 @@ VAOS::Engine.routes.draw do
     resources :appointments, only: %i[index create] do
       put 'cancel', on: :collection
     end
-    get '/appointments/:type/:id', to: 'appointments#show', type: /va/, constraints: { id: /[a-zA-Z0-9.]+/ }
+    get '/appointments/:type/:id', to: 'appointments#show', type: /va/, constraints: { id: /[a-zA-Z0-9.-]+/ }
     resources :appointment_requests, only: %i[index create update show] do
       resources :messages, only: %i[index create]
     end
@@ -51,7 +51,8 @@ VAOS::Engine.routes.draw do
     get '/patients/', to: 'patients#index'
     get '/scheduling/configurations', to: 'scheduling#configurations'
     get '/facilities', to: 'facilities#index'
-
+    get '/facilities/:facility_id', to: 'facilities#show'
     post '/appointments', to: 'appointments#create'
+    put '/appointments/cancel/:id', to: 'appointments#cancel'
   end
 end

@@ -29,7 +29,7 @@ module AppealsApi
           describe '#mailing_address' do
             it do
               expect(form_data.mailing_address)
-                .to eq('123 Main St Suite #1200 Box 4, New York, NY, 30012, United States')
+                .to eq('123 Main St Suite #1200 Box 4, North Pole, H0H 0H0, Canada')
             end
           end
 
@@ -52,6 +52,11 @@ module AppealsApi
           end
 
           describe '#preferred_email' do
+            before do
+              # Email from fixture file is very long, so set up something shorter here
+              notice_of_disagreement.form_data['data']['attributes']['veteran']['emailAddressText'] = 'user@example.com'
+            end
+
             it { expect(form_data.preferred_email).to eq('user@example.com') }
           end
 

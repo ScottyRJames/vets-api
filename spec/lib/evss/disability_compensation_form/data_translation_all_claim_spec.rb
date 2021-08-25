@@ -205,6 +205,13 @@ describe EVSS::DisabilityCompensationForm::DataTranslationAllClaim do
             }
           end
         end
+        context 'and the user is not authorized to access ppiu' do
+          it 'gathers the banking info from the PPIU service' do
+            Flipper.disable :direct_deposit_cnp
+            expect(subject.send(:translate_banking_info)).to eq({})
+            Flipper.enable :direct_deposit_cnp
+          end
+        end
       end
 
       context 'and the PPIU service does not have the account info' do
@@ -557,6 +564,11 @@ describe EVSS::DisabilityCompensationForm::DataTranslationAllClaim do
                 'first' => 'Steve',
                 'middle' => 'Steverson',
                 'last' => 'Stevington'
+              },
+              {
+                'first' => 'Steve',
+                'middle' => 'Steverson',
+                'last' => 'Stevington'
               }
             ]
           }
@@ -669,7 +681,7 @@ describe EVSS::DisabilityCompensationForm::DataTranslationAllClaim do
           'form526' => {
             'mailingAddress' => {
               'country' => 'Germany',
-              'city' => 'Hamburg',
+              'city' => ' apo ',
               'state' => 'AA',
               'addressLine1' => '1234 Couch Strasse',
               'zipCode' => '12345-6789'
@@ -682,7 +694,7 @@ describe EVSS::DisabilityCompensationForm::DataTranslationAllClaim do
         expect(subject.send(:translate_veteran)).to eq 'veteran' => {
           'currentMailingAddress' => {
             'addressLine1' => '1234 Couch Strasse',
-            'militaryPostOfficeTypeCode' => 'Hamburg',
+            'militaryPostOfficeTypeCode' => 'APO',
             'country' => 'Germany',
             'militaryStateCode' => 'AA',
             'type' => 'MILITARY',

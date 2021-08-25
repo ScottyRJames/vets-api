@@ -171,10 +171,18 @@
           "description": "A Change of Address Object being submitted.",
           "type": "object",
           "additionalProperties": false,
+          "required": ["country", "type", "addressLine1", "addressChangeType", "beginningDate"],
           "properties": {
             "beginningDate": {
               "description": "Date in YYYY-MM-DD the Veteran changed address.",
+              "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
               "type": "string",
+              "example": "2018-06-04"
+            },
+            "endingDate": {
+              "description": "Date in YYYY-MM-DD the changed address expires, if change is temporary.",
+              "type": "string",
+              "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
               "example": "2018-06-04"
             },
             "addressChangeType": {
@@ -246,6 +254,20 @@
             {
               "if": {
                 "properties": {
+                  "addressChangeType": {
+                    "const": "TEMPORARY"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "endingDate"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
                   "type": {
                     "const": "INTERNATIONAL"
                   }
@@ -253,12 +275,7 @@
               },
               "then": {
                 "required": [
-                  "beginningDate",
-                  "addressChangeType",
-                  "addressLine1",
                   "city",
-                  "country",
-                  "type",
                   "internationalPostalCode"
                 ]
               }
@@ -273,13 +290,8 @@
               },
               "then": {
                 "required": [
-                  "beginningDate",
-                  "addressChangeType",
-                  "addressLine1",
                   "city",
-                  "country",
                   "zipFirstFive",
-                  "type",
                   "state"
                 ]
               }
@@ -294,14 +306,9 @@
               },
               "then": {
                 "required": [
-                  "beginningDate",
-                  "addressChangeType",
-                  "addressLine1",
-                  "country",
                   "zipFirstFive",
                   "militaryStateCode",
-                  "militaryPostOfficeTypeCode",
-                  "type"
+                  "militaryPostOfficeTypeCode"
                 ]
               }
             }
@@ -311,7 +318,9 @@
           "description": "Object describing Veteran Homelessness if applicable.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["pointOfContact"],
+          "dependentRequired": {
+            "pointOfContact": ["currentlyHomeless", "homelessnessRisk"]
+            },
           "properties": {
             "pointOfContact": {
               "description": "Object describing Homeless Veteran Point of Contact.",
@@ -412,7 +421,6 @@
           "uniqueItems": true,
           "items": {
             "type": "object",
-            "additionalProperties": false,
             "required": [
               "serviceBranch",
               "activeDutyBeginDate",
@@ -425,41 +433,42 @@
                 "example": "Air Force",
                 "enum": [
                   "Air Force",
-                  "Air Force Reserves",
                   "Air National Guard",
                   "Army",
                   "Army National Guard",
-                  "Army Reserves",
-                  "Coast Guard",
-                  "Coast Guard Reserves",
-                  "Marine Corps",
-                  "Marine Corps Reserves",
-                  "National Oceanic &amp; Atmospheric Administration",
-                  "Navy",
-                  "Navy Reserves",
-                  "Public Health Service",
-                  "Air Force Academy",
-                  "Army Air Corps or Army Air Force",
                   "Army Nurse Corps",
-                  "Coast Guard Academy",
+                  "Coast Guard",
                   "Merchant Marine",
-                  "Naval Academy",
-                  "Other",
-                  "US Military Academy",
-                  "Women's Army Corps"
+                  "Navy",
+                  "Public Health Service",
+                  "Air Force Civilian",
+                  "Army Air Corps",
+                  "Commonwealth Army Veteran",
+                  "Guerrilla Combination Service",
+                  "Marine",
+                  "National Oceanic and Atmospheric Administration",
+                  "Regular Philippine Scout",
+                  "Regular Scout Service",
+                  "Special Philippine Scout",
+                  "Unknown",
+                  "Woman Air Corps"
                 ]
               },
               "activeDutyBeginDate": {
                 "description": "Date Started Active Duty.",
                 "type": "string",
-                "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                 "example": "1980-02-05"
               },
               "activeDutyEndDate": {
                 "description": "Date Completed Active Duty.",
                 "type": "string",
-                "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                 "example": "1990-01-02"
+              },
+              "separationLocationCode": {
+                "type": "string",
+                "example": "98283"
               }
             }
           }
@@ -475,11 +484,11 @@
             "properties": {
               "confinementBeginDate": {
                 "type": "string",
-                "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
               },
               "confinementEndDate": {
                 "type": "string",
-                "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
               }
             }
           }
@@ -506,21 +515,21 @@
               "properties": {
                 "anticipatedSeparationDate": {
                   "type": "string",
-                  "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                 },
                 "title10ActivationDate": {
                   "type": "string",
-                  "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                 }
               }
             },
             "obligationTermOfServiceFromDate": {
               "type": "string",
-              "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+              "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
             },
             "obligationTermOfServiceToDate": {
               "type": "string",
-              "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+              "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
             },
             "unitName": {
               "type": "string"
@@ -767,7 +776,7 @@
           "disabilityActionType": {
             "description": "The status of the current disability.",
             "type": "string",
-            "enum": ["NONE", "NEW", "SECONDARY", "INCREASE", "REOPEN"],
+            "enum": ["NONE", "NEW", "INCREASE"],
             "example": "NEW"
           },
           "name": {
@@ -793,7 +802,7 @@
                 "disabilityActionType": {
                   "description": "The status of the secondary disability.",
                   "type": "string",
-                  "enum": ["NONE", "NEW", "SECONDARY", "INCREASE", "REOPEN"],
+                  "enum": ["NONE", "NEW", "SECONDARY", "INCREASE"],
                   "example": "SECONDARY"
                 },
                 "serviceRelevance": {
@@ -972,6 +981,17 @@
               }
             }
           }
+        },
+        "if": {
+          "properties": {
+            "disabilityActionType": {
+              "enum": ["INCREASE"]
+            }
+          },
+          "required": ["disabilityActionType"]
+        },
+        "then": {
+          "required": ["ratedDisabilityId"]
         }
       }
     },
@@ -993,13 +1013,13 @@
           "startDate": {
             "description": "Date Veteran started treatment.",
             "type": "string",
-            "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+            "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
             "example": "2018-03-02"
           },
           "endDate": {
             "description": "Date Veteran ended treatment.",
             "type": "string",
-            "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+            "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
             "example": "2018-03-02"
           },
           "treatedDisabilityNames": {
@@ -1039,11 +1059,6 @@
       "description": "Details about Veteran receiving Service Pay from DoD.",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "waiveVABenefitsToRetainTrainingPay",
-        "waiveVABenefitsToRetainRetiredPay",
-        "militaryRetiredPay"
-      ],
       "properties": {
         "waiveVABenefitsToRetainTrainingPay": {
           "description": "Is Veteran Waiving benefits to retain training pay.",
@@ -1062,9 +1077,15 @@
           "required": ["receiving", "payment"],
           "properties": {
             "receiving": {
-              "description": "Is Veteran getting Retiree pay.",
+              "description": "Is Veteran getting Retiree pay?",
               "type": "boolean",
               "example": true
+            },
+            "willReceiveInFuture": {
+              "description": "Will Veteran get Retiree pay in future?",
+              "type": "boolean",
+              "default": false,
+              "example": false
             },
             "payment": {
               "description": "Part of DoD paying Retirement Benefits.",
@@ -1101,13 +1122,106 @@
                     "Women's Army Corps"
                   ],
                   "example": "Air Force"
+                },
+                "amount": {
+                  "description": "Amount being received.",
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 999999,
+                  "example": 100
                 }
               }
+            },
+            "willReceiveInfuture": {
+              "description": "Will military retired pay be received in the future?",
+              "type": "boolean",
+              "default": false,
+              "example": false
+            },
+            "futurePayExplanation": {
+              "description": "Explains why future pay will be received.",
+              "type": "string",
+              "example": "Will be retiring soon."
             }
+          },
+          "if": {
+            "properties": {
+              "willReceiveInFuture": {
+                "const": true
+              }
+            },
+            "required": ["willReceiveInFuture"]
+          },
+          "then": {
+            "required": ["futurePayExplanation"]
           }
         },
         "hasSeparationPay": {
           "type": "boolean"
+        },
+        "separationPay": {
+          "description": "Details about separation pay.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["received"],
+          "properties": {
+            "received": {
+              "description": "Has separation pay been received?",
+              "type": "boolean",
+              "example": true,
+              "default": true
+            },
+            "payment": {
+              "description": "Separation pay payment details.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "serviceBranch": {
+                  "description": "Branch of Service making payments.",
+                  "type": "string",
+                  "enum": [
+                    "Air Force",
+                    "Air Force Reserves",
+                    "Air National Guard",
+                    "Army",
+                    "Army National Guard",
+                    "Army Reserves",
+                    "Coast Guard",
+                    "Coast Guard Reserves",
+                    "Marine Corps",
+                    "Marine Corps Reserves",
+                    "National Oceanic &amp; Atmospheric Administration",
+                    "Navy",
+                    "Navy Reserves",
+                    "Public Health Service",
+                    "Air Force Academy",
+                    "Army Air Corps or Army Air Force",
+                    "Army Nurse Corps",
+                    "Coast Guard Academy",
+                    "Merchant Marine",
+                    "Naval Academy",
+                    "Other",
+                    "US Military Academy",
+                    "Women's Army Corps"
+                  ],
+                  "example": "Air Force"
+                },
+                "amount": {
+                  "description": "Amount being received.",
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 999999,
+                  "example": 100
+                }
+              }
+            },
+            "receivedDate": {
+              "description": "Approximate date separation pay was received.",
+              "type": "string",
+              "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+              "example": "2018-03-02"
+            }
+          }
         }
       }
     },
@@ -1167,7 +1281,7 @@
     "claimDate": {
       "description": "Date when claim is being submitted to the VA.",
       "type": "string",
-      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
       "example": "2018-08-28"
     }
   }

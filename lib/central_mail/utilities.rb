@@ -9,8 +9,9 @@ module CentralMail
     # valid lines of business.  From 'LOG' on these keys must be mapped to 'CMP' until they are formally supported.
     # See https://vajira.max.gov/browse/API-678 for a description of the LOBs
     VALID_LOB = { 'CMP' => 'CMP', 'PMC' => 'PMC', 'INS' => 'INS', 'EDU' => 'EDU', 'VRE' => 'VRE', 'BVA' => 'BVA',
-                  'FID' => 'FID', 'LOG' => 'CMP', 'MED' => 'CMP', 'BUR' => 'CMP', 'OTH' => 'CMP',
-                  'DROC' => 'CMP' }.freeze
+                  'FID' => 'FID', 'OTH' => 'CMP' }.freeze
+    VALID_LOB_MSG = { 'CMP' => 'CMP', 'PMC' => 'PMC', 'INS' => 'INS', 'EDU' => 'EDU', 'VRE' => 'VRE', 'BVA' => 'BVA',
+                      'FID' => 'FID', 'OTH' => 'OTH' }.freeze
     REQUIRED_KEYS = %w[veteranFirstName veteranLastName fileNumber zipCode].freeze
     FILE_NUMBER_REGEX = /^\d{8,9}$/.freeze
     MAX_PART_SIZE = 100_000_000 # 100MB

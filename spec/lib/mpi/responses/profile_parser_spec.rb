@@ -157,6 +157,7 @@ describe MPI::Responses::ProfileParser do
           mhv_ids: [],
           active_mhv_ids: [],
           vha_facility_ids: [],
+          vha_facility_hash: nil,
           cerner_id: nil,
           cerner_facility_ids: [],
           edipi: nil,
@@ -164,7 +165,7 @@ describe MPI::Responses::ProfileParser do
           birls_id: nil,
           birls_ids: [],
           search_token: 'WSDOC2005221733165441605720989',
-          person_type_code: 'Dependent',
+          person_types: %w[DEP VET],
           relationships: [mpi_profile_relationship_component],
           id_theft_flag: false
         )
@@ -173,7 +174,7 @@ describe MPI::Responses::ProfileParser do
       let(:mpi_profile_relationship_component) do
         build(
           :mpi_profile_relationship,
-          person_type_code: [],
+          person_types: [],
           given_names: %w[Mark],
           family_name: 'Webb',
           suffix: 'Jr',
@@ -200,6 +201,7 @@ describe MPI::Responses::ProfileParser do
           mhv_ids: ['4795335'],
           active_mhv_ids: ['4795335'],
           vha_facility_ids: %w[200MH],
+          vha_facility_hash: { '200MH' => ['4795335'] },
           edipi: '1013590059',
           participant_id: '13367440',
           birls_id: '796104437',
@@ -291,7 +293,7 @@ describe MPI::Responses::ProfileParser do
           '123412345^PI^200BRLS^USVBA^A'
         ],
         search_token: 'WSDOC1611060614456041732180196',
-        person_type_code: 'Patient',
+        person_types: ['PAT'],
         id_theft_flag: false
       )
     end

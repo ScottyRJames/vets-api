@@ -57,6 +57,7 @@ RSpec.describe Mobile::V0::PreCacheAppointmentsJob, type: :job do
                         start_date_local: '2020-06-26T22:19:00.000-04:00',
                         start_date_utc: '2020-06-27T02:19:00.000Z',
                         status: 'BOOKED',
+                        status_detail: nil,
                         time_zone: 'America/New_York',
                         vetext_id: nil })
             end
@@ -70,7 +71,7 @@ RSpec.describe Mobile::V0::PreCacheAppointmentsJob, type: :job do
             VCR.use_cassette('appointments/get_cc_appointments_500', match_requests_on: %i[method uri]) do
               VCR.use_cassette('appointments/get_appointments_default', match_requests_on: %i[method uri]) do
                 expect(Mobile::V0::Appointment.get_cached(user)).to be_nil
-                subject.perform(user.uuid)
+                expect { subject.perform(user.uuid) }.to raise_error(Common::Exceptions::BackendServiceException)
                 expect(Mobile::V0::Appointment.get_cached(user)).to be_nil
               end
             end

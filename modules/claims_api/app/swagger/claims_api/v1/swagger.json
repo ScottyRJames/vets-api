@@ -329,6 +329,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -383,6 +394,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -474,7 +496,7 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "f2a1eedf-e037-496f-a13e-96c62f847f9c",
+                    "id": "6d5f6f8f-b497-4ff2-8156-2371389982be",
                     "type": "claims_api_claim",
                     "attributes": {
                       "evss_id": 600118851,
@@ -523,11 +545,11 @@
                       "status": "Initial review",
                       "supporting_documents": [
                         {
-                          "id": "166a083f-34ed-44ed-a337-f329ab53f2e8",
+                          "id": "fd4a03bf-1c3c-410a-8ecf-57f1e6528186",
                           "type": "claim_supporting_document",
                           "md5": "d927c7e283b3158a54822a493d06181d",
                           "filename": "extras.pdf",
-                          "uploaded_at": "2021-06-16T15:51:28.649Z"
+                          "uploaded_at": "2021-08-24T19:20:02.869Z"
                         }
                       ]
                     }
@@ -628,6 +650,7 @@
                               "type": "string",
                               "description": "Current status of the claim",
                               "enum": [
+                                "pending",
                                 "Claim received",
                                 "Initial review",
                                 "Evidence gathering, review, and decision",
@@ -813,6 +836,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -867,6 +901,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -1075,10 +1120,24 @@
                               "description": "A Change of Address Object being submitted.",
                               "type": "object",
                               "additionalProperties": false,
+                              "required": [
+                                "country",
+                                "type",
+                                "addressLine1",
+                                "addressChangeType",
+                                "beginningDate"
+                              ],
                               "properties": {
                                 "beginningDate": {
                                   "description": "Date in YYYY-MM-DD the Veteran changed address.",
+                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                   "type": "string",
+                                  "example": "2018-06-04"
+                                },
+                                "endingDate": {
+                                  "description": "Date in YYYY-MM-DD the changed address expires, if change is temporary.",
+                                  "type": "string",
+                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                   "example": "2018-06-04"
                                 },
                                 "addressChangeType": {
@@ -1154,6 +1213,20 @@
                                 {
                                   "if": {
                                     "properties": {
+                                      "addressChangeType": {
+                                        "const": "TEMPORARY"
+                                      }
+                                    }
+                                  },
+                                  "then": {
+                                    "required": [
+                                      "endingDate"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "if": {
+                                    "properties": {
                                       "type": {
                                         "const": "INTERNATIONAL"
                                       }
@@ -1161,12 +1234,7 @@
                                   },
                                   "then": {
                                     "required": [
-                                      "beginningDate",
-                                      "addressChangeType",
-                                      "addressLine1",
                                       "city",
-                                      "country",
-                                      "type",
                                       "internationalPostalCode"
                                     ]
                                   }
@@ -1181,13 +1249,8 @@
                                   },
                                   "then": {
                                     "required": [
-                                      "beginningDate",
-                                      "addressChangeType",
-                                      "addressLine1",
                                       "city",
-                                      "country",
                                       "zipFirstFive",
-                                      "type",
                                       "state"
                                     ]
                                   }
@@ -1202,14 +1265,9 @@
                                   },
                                   "then": {
                                     "required": [
-                                      "beginningDate",
-                                      "addressChangeType",
-                                      "addressLine1",
-                                      "country",
                                       "zipFirstFive",
                                       "militaryStateCode",
-                                      "militaryPostOfficeTypeCode",
-                                      "type"
+                                      "militaryPostOfficeTypeCode"
                                     ]
                                   }
                                 }
@@ -1219,9 +1277,12 @@
                               "description": "Object describing Veteran Homelessness if applicable.",
                               "type": "object",
                               "additionalProperties": false,
-                              "required": [
-                                "pointOfContact"
-                              ],
+                              "dependentRequired": {
+                                "pointOfContact": [
+                                  "currentlyHomeless",
+                                  "homelessnessRisk"
+                                ]
+                              },
                               "properties": {
                                 "pointOfContact": {
                                   "description": "Object describing Homeless Veteran Point of Contact.",
@@ -1337,7 +1398,6 @@
                               "uniqueItems": true,
                               "items": {
                                 "type": "object",
-                                "additionalProperties": false,
                                 "required": [
                                   "serviceBranch",
                                   "activeDutyBeginDate",
@@ -1350,41 +1410,42 @@
                                     "example": "Air Force",
                                     "enum": [
                                       "Air Force",
-                                      "Air Force Reserves",
                                       "Air National Guard",
                                       "Army",
                                       "Army National Guard",
-                                      "Army Reserves",
-                                      "Coast Guard",
-                                      "Coast Guard Reserves",
-                                      "Marine Corps",
-                                      "Marine Corps Reserves",
-                                      "National Oceanic &amp; Atmospheric Administration",
-                                      "Navy",
-                                      "Navy Reserves",
-                                      "Public Health Service",
-                                      "Air Force Academy",
-                                      "Army Air Corps or Army Air Force",
                                       "Army Nurse Corps",
-                                      "Coast Guard Academy",
+                                      "Coast Guard",
                                       "Merchant Marine",
-                                      "Naval Academy",
-                                      "Other",
-                                      "US Military Academy",
-                                      "Women's Army Corps"
+                                      "Navy",
+                                      "Public Health Service",
+                                      "Air Force Civilian",
+                                      "Army Air Corps",
+                                      "Commonwealth Army Veteran",
+                                      "Guerrilla Combination Service",
+                                      "Marine",
+                                      "National Oceanic and Atmospheric Administration",
+                                      "Regular Philippine Scout",
+                                      "Regular Scout Service",
+                                      "Special Philippine Scout",
+                                      "Unknown",
+                                      "Woman Air Corps"
                                     ]
                                   },
                                   "activeDutyBeginDate": {
                                     "description": "Date Started Active Duty.",
                                     "type": "string",
-                                    "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                     "example": "1980-02-05"
                                   },
                                   "activeDutyEndDate": {
                                     "description": "Date Completed Active Duty.",
                                     "type": "string",
-                                    "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                     "example": "1990-01-02"
+                                  },
+                                  "separationLocationCode": {
+                                    "type": "string",
+                                    "example": "98283"
                                   }
                                 }
                               }
@@ -1403,11 +1464,11 @@
                                 "properties": {
                                   "confinementBeginDate": {
                                     "type": "string",
-                                    "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                   },
                                   "confinementEndDate": {
                                     "type": "string",
-                                    "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                   }
                                 }
                               }
@@ -1434,21 +1495,21 @@
                                   "properties": {
                                     "anticipatedSeparationDate": {
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                     },
                                     "title10ActivationDate": {
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                     }
                                   }
                                 },
                                 "obligationTermOfServiceFromDate": {
                                   "type": "string",
-                                  "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                 },
                                 "obligationTermOfServiceToDate": {
                                   "type": "string",
-                                  "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                 },
                                 "unitName": {
                                   "type": "string"
@@ -1707,9 +1768,7 @@
                                 "enum": [
                                   "NONE",
                                   "NEW",
-                                  "SECONDARY",
-                                  "INCREASE",
-                                  "REOPEN"
+                                  "INCREASE"
                                 ],
                                 "example": "NEW"
                               },
@@ -1744,8 +1803,7 @@
                                         "NONE",
                                         "NEW",
                                         "SECONDARY",
-                                        "INCREASE",
-                                        "REOPEN"
+                                        "INCREASE"
                                       ],
                                       "example": "SECONDARY"
                                     },
@@ -1925,6 +1983,23 @@
                                   }
                                 }
                               }
+                            },
+                            "if": {
+                              "properties": {
+                                "disabilityActionType": {
+                                  "enum": [
+                                    "INCREASE"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "disabilityActionType"
+                              ]
+                            },
+                            "then": {
+                              "required": [
+                                "ratedDisabilityId"
+                              ]
                             }
                           }
                         },
@@ -1946,13 +2021,13 @@
                               "startDate": {
                                 "description": "Date Veteran started treatment.",
                                 "type": "string",
-                                "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                 "example": "2018-03-02"
                               },
                               "endDate": {
                                 "description": "Date Veteran ended treatment.",
                                 "type": "string",
-                                "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                 "example": "2018-03-02"
                               },
                               "treatedDisabilityNames": {
@@ -1995,11 +2070,6 @@
                           "description": "Details about Veteran receiving Service Pay from DoD.",
                           "type": "object",
                           "additionalProperties": false,
-                          "required": [
-                            "waiveVABenefitsToRetainTrainingPay",
-                            "waiveVABenefitsToRetainRetiredPay",
-                            "militaryRetiredPay"
-                          ],
                           "properties": {
                             "waiveVABenefitsToRetainTrainingPay": {
                               "description": "Is Veteran Waiving benefits to retain training pay.",
@@ -2021,9 +2091,15 @@
                               ],
                               "properties": {
                                 "receiving": {
-                                  "description": "Is Veteran getting Retiree pay.",
+                                  "description": "Is Veteran getting Retiree pay?",
                                   "type": "boolean",
                                   "example": true
+                                },
+                                "willReceiveInFuture": {
+                                  "description": "Will Veteran get Retiree pay in future?",
+                                  "type": "boolean",
+                                  "default": false,
+                                  "example": false
                                 },
                                 "payment": {
                                   "description": "Part of DoD paying Retirement Benefits.",
@@ -2062,13 +2138,112 @@
                                         "Women's Army Corps"
                                       ],
                                       "example": "Air Force"
+                                    },
+                                    "amount": {
+                                      "description": "Amount being received.",
+                                      "type": "number",
+                                      "minimum": 1,
+                                      "maximum": 999999,
+                                      "example": 100
                                     }
                                   }
+                                },
+                                "willReceiveInfuture": {
+                                  "description": "Will military retired pay be received in the future?",
+                                  "type": "boolean",
+                                  "default": false,
+                                  "example": false
+                                },
+                                "futurePayExplanation": {
+                                  "description": "Explains why future pay will be received.",
+                                  "type": "string",
+                                  "example": "Will be retiring soon."
                                 }
+                              },
+                              "if": {
+                                "properties": {
+                                  "willReceiveInFuture": {
+                                    "const": true
+                                  }
+                                },
+                                "required": [
+                                  "willReceiveInFuture"
+                                ]
+                              },
+                              "then": {
+                                "required": [
+                                  "futurePayExplanation"
+                                ]
                               }
                             },
                             "hasSeparationPay": {
                               "type": "boolean"
+                            },
+                            "separationPay": {
+                              "description": "Details about separation pay.",
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "received"
+                              ],
+                              "properties": {
+                                "received": {
+                                  "description": "Has separation pay been received?",
+                                  "type": "boolean",
+                                  "example": true,
+                                  "default": true
+                                },
+                                "payment": {
+                                  "description": "Separation pay payment details.",
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "serviceBranch": {
+                                      "description": "Branch of Service making payments.",
+                                      "type": "string",
+                                      "enum": [
+                                        "Air Force",
+                                        "Air Force Reserves",
+                                        "Air National Guard",
+                                        "Army",
+                                        "Army National Guard",
+                                        "Army Reserves",
+                                        "Coast Guard",
+                                        "Coast Guard Reserves",
+                                        "Marine Corps",
+                                        "Marine Corps Reserves",
+                                        "National Oceanic &amp; Atmospheric Administration",
+                                        "Navy",
+                                        "Navy Reserves",
+                                        "Public Health Service",
+                                        "Air Force Academy",
+                                        "Army Air Corps or Army Air Force",
+                                        "Army Nurse Corps",
+                                        "Coast Guard Academy",
+                                        "Merchant Marine",
+                                        "Naval Academy",
+                                        "Other",
+                                        "US Military Academy",
+                                        "Women's Army Corps"
+                                      ],
+                                      "example": "Air Force"
+                                    },
+                                    "amount": {
+                                      "description": "Amount being received.",
+                                      "type": "number",
+                                      "minimum": 1,
+                                      "maximum": 999999,
+                                      "example": 100
+                                    }
+                                  }
+                                },
+                                "receivedDate": {
+                                  "description": "Approximate date separation pay was received.",
+                                  "type": "string",
+                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                  "example": "2018-03-02"
+                                }
+                              }
                             }
                           }
                         },
@@ -2135,7 +2310,7 @@
                         "claimDate": {
                           "description": "Date when claim is being submitted to the VA.",
                           "type": "string",
-                          "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                          "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                           "example": "2018-08-28"
                         }
                       }
@@ -2218,7 +2393,7 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "0db4fcbe-7881-4cc2-93c5-cd62c6fef1c0",
+                    "id": "c88b87bd-4be1-4f5b-b31f-ad69ce7e3d18",
                     "type": "claims_api_claim",
                     "attributes": {
                       "evss_id": null,
@@ -2236,13 +2411,13 @@
                       "current_phase_back": null,
                       "requested_decision": null,
                       "claim_type": null,
-                      "updated_at": "2021-06-16T15:51:28.971Z",
+                      "updated_at": "2021-08-24T19:20:03.276Z",
                       "contention_list": null,
                       "va_representative": null,
                       "events_timeline": [
 
                       ],
-                      "token": "0db4fcbe-7881-4cc2-93c5-cd62c6fef1c0",
+                      "token": "c88b87bd-4be1-4f5b-b31f-ad69ce7e3d18",
                       "status": "pending",
                       "flashes": [
                         "Hardship",
@@ -2427,6 +2602,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -2752,10 +2938,24 @@
                                 "description": "A Change of Address Object being submitted.",
                                 "type": "object",
                                 "additionalProperties": false,
+                                "required": [
+                                  "country",
+                                  "type",
+                                  "addressLine1",
+                                  "addressChangeType",
+                                  "beginningDate"
+                                ],
                                 "properties": {
                                   "beginningDate": {
                                     "description": "Date in YYYY-MM-DD the Veteran changed address.",
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                     "type": "string",
+                                    "example": "2018-06-04"
+                                  },
+                                  "endingDate": {
+                                    "description": "Date in YYYY-MM-DD the changed address expires, if change is temporary.",
+                                    "type": "string",
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                     "example": "2018-06-04"
                                   },
                                   "addressChangeType": {
@@ -2831,6 +3031,20 @@
                                   {
                                     "if": {
                                       "properties": {
+                                        "addressChangeType": {
+                                          "const": "TEMPORARY"
+                                        }
+                                      }
+                                    },
+                                    "then": {
+                                      "required": [
+                                        "endingDate"
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "if": {
+                                      "properties": {
                                         "type": {
                                           "const": "INTERNATIONAL"
                                         }
@@ -2838,12 +3052,7 @@
                                     },
                                     "then": {
                                       "required": [
-                                        "beginningDate",
-                                        "addressChangeType",
-                                        "addressLine1",
                                         "city",
-                                        "country",
-                                        "type",
                                         "internationalPostalCode"
                                       ]
                                     }
@@ -2858,13 +3067,8 @@
                                     },
                                     "then": {
                                       "required": [
-                                        "beginningDate",
-                                        "addressChangeType",
-                                        "addressLine1",
                                         "city",
-                                        "country",
                                         "zipFirstFive",
-                                        "type",
                                         "state"
                                       ]
                                     }
@@ -2879,14 +3083,9 @@
                                     },
                                     "then": {
                                       "required": [
-                                        "beginningDate",
-                                        "addressChangeType",
-                                        "addressLine1",
-                                        "country",
                                         "zipFirstFive",
                                         "militaryStateCode",
-                                        "militaryPostOfficeTypeCode",
-                                        "type"
+                                        "militaryPostOfficeTypeCode"
                                       ]
                                     }
                                   }
@@ -2896,9 +3095,12 @@
                                 "description": "Object describing Veteran Homelessness if applicable.",
                                 "type": "object",
                                 "additionalProperties": false,
-                                "required": [
-                                  "pointOfContact"
-                                ],
+                                "dependentRequired": {
+                                  "pointOfContact": [
+                                    "currentlyHomeless",
+                                    "homelessnessRisk"
+                                  ]
+                                },
                                 "properties": {
                                   "pointOfContact": {
                                     "description": "Object describing Homeless Veteran Point of Contact.",
@@ -3014,7 +3216,6 @@
                                 "uniqueItems": true,
                                 "items": {
                                   "type": "object",
-                                  "additionalProperties": false,
                                   "required": [
                                     "serviceBranch",
                                     "activeDutyBeginDate",
@@ -3027,41 +3228,42 @@
                                       "example": "Air Force",
                                       "enum": [
                                         "Air Force",
-                                        "Air Force Reserves",
                                         "Air National Guard",
                                         "Army",
                                         "Army National Guard",
-                                        "Army Reserves",
-                                        "Coast Guard",
-                                        "Coast Guard Reserves",
-                                        "Marine Corps",
-                                        "Marine Corps Reserves",
-                                        "National Oceanic &amp; Atmospheric Administration",
-                                        "Navy",
-                                        "Navy Reserves",
-                                        "Public Health Service",
-                                        "Air Force Academy",
-                                        "Army Air Corps or Army Air Force",
                                         "Army Nurse Corps",
-                                        "Coast Guard Academy",
+                                        "Coast Guard",
                                         "Merchant Marine",
-                                        "Naval Academy",
-                                        "Other",
-                                        "US Military Academy",
-                                        "Women's Army Corps"
+                                        "Navy",
+                                        "Public Health Service",
+                                        "Air Force Civilian",
+                                        "Army Air Corps",
+                                        "Commonwealth Army Veteran",
+                                        "Guerrilla Combination Service",
+                                        "Marine",
+                                        "National Oceanic and Atmospheric Administration",
+                                        "Regular Philippine Scout",
+                                        "Regular Scout Service",
+                                        "Special Philippine Scout",
+                                        "Unknown",
+                                        "Woman Air Corps"
                                       ]
                                     },
                                     "activeDutyBeginDate": {
                                       "description": "Date Started Active Duty.",
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                       "example": "1980-02-05"
                                     },
                                     "activeDutyEndDate": {
                                       "description": "Date Completed Active Duty.",
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                       "example": "1990-01-02"
+                                    },
+                                    "separationLocationCode": {
+                                      "type": "string",
+                                      "example": "98283"
                                     }
                                   }
                                 }
@@ -3080,11 +3282,11 @@
                                   "properties": {
                                     "confinementBeginDate": {
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                     },
                                     "confinementEndDate": {
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                     }
                                   }
                                 }
@@ -3111,21 +3313,21 @@
                                     "properties": {
                                       "anticipatedSeparationDate": {
                                         "type": "string",
-                                        "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                        "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                       },
                                       "title10ActivationDate": {
                                         "type": "string",
-                                        "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                        "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                       }
                                     }
                                   },
                                   "obligationTermOfServiceFromDate": {
                                     "type": "string",
-                                    "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                   },
                                   "obligationTermOfServiceToDate": {
                                     "type": "string",
-                                    "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                   },
                                   "unitName": {
                                     "type": "string"
@@ -3384,9 +3586,7 @@
                                   "enum": [
                                     "NONE",
                                     "NEW",
-                                    "SECONDARY",
-                                    "INCREASE",
-                                    "REOPEN"
+                                    "INCREASE"
                                   ],
                                   "example": "NEW"
                                 },
@@ -3421,8 +3621,7 @@
                                           "NONE",
                                           "NEW",
                                           "SECONDARY",
-                                          "INCREASE",
-                                          "REOPEN"
+                                          "INCREASE"
                                         ],
                                         "example": "SECONDARY"
                                       },
@@ -3602,6 +3801,23 @@
                                     }
                                   }
                                 }
+                              },
+                              "if": {
+                                "properties": {
+                                  "disabilityActionType": {
+                                    "enum": [
+                                      "INCREASE"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "disabilityActionType"
+                                ]
+                              },
+                              "then": {
+                                "required": [
+                                  "ratedDisabilityId"
+                                ]
                               }
                             }
                           },
@@ -3623,13 +3839,13 @@
                                 "startDate": {
                                   "description": "Date Veteran started treatment.",
                                   "type": "string",
-                                  "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                   "example": "2018-03-02"
                                 },
                                 "endDate": {
                                   "description": "Date Veteran ended treatment.",
                                   "type": "string",
-                                  "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                   "example": "2018-03-02"
                                 },
                                 "treatedDisabilityNames": {
@@ -3672,11 +3888,6 @@
                             "description": "Details about Veteran receiving Service Pay from DoD.",
                             "type": "object",
                             "additionalProperties": false,
-                            "required": [
-                              "waiveVABenefitsToRetainTrainingPay",
-                              "waiveVABenefitsToRetainRetiredPay",
-                              "militaryRetiredPay"
-                            ],
                             "properties": {
                               "waiveVABenefitsToRetainTrainingPay": {
                                 "description": "Is Veteran Waiving benefits to retain training pay.",
@@ -3698,9 +3909,15 @@
                                 ],
                                 "properties": {
                                   "receiving": {
-                                    "description": "Is Veteran getting Retiree pay.",
+                                    "description": "Is Veteran getting Retiree pay?",
                                     "type": "boolean",
                                     "example": true
+                                  },
+                                  "willReceiveInFuture": {
+                                    "description": "Will Veteran get Retiree pay in future?",
+                                    "type": "boolean",
+                                    "default": false,
+                                    "example": false
                                   },
                                   "payment": {
                                     "description": "Part of DoD paying Retirement Benefits.",
@@ -3739,13 +3956,112 @@
                                           "Women's Army Corps"
                                         ],
                                         "example": "Air Force"
+                                      },
+                                      "amount": {
+                                        "description": "Amount being received.",
+                                        "type": "number",
+                                        "minimum": 1,
+                                        "maximum": 999999,
+                                        "example": 100
                                       }
                                     }
+                                  },
+                                  "willReceiveInfuture": {
+                                    "description": "Will military retired pay be received in the future?",
+                                    "type": "boolean",
+                                    "default": false,
+                                    "example": false
+                                  },
+                                  "futurePayExplanation": {
+                                    "description": "Explains why future pay will be received.",
+                                    "type": "string",
+                                    "example": "Will be retiring soon."
                                   }
+                                },
+                                "if": {
+                                  "properties": {
+                                    "willReceiveInFuture": {
+                                      "const": true
+                                    }
+                                  },
+                                  "required": [
+                                    "willReceiveInFuture"
+                                  ]
+                                },
+                                "then": {
+                                  "required": [
+                                    "futurePayExplanation"
+                                  ]
                                 }
                               },
                               "hasSeparationPay": {
                                 "type": "boolean"
+                              },
+                              "separationPay": {
+                                "description": "Details about separation pay.",
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "received"
+                                ],
+                                "properties": {
+                                  "received": {
+                                    "description": "Has separation pay been received?",
+                                    "type": "boolean",
+                                    "example": true,
+                                    "default": true
+                                  },
+                                  "payment": {
+                                    "description": "Separation pay payment details.",
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "serviceBranch": {
+                                        "description": "Branch of Service making payments.",
+                                        "type": "string",
+                                        "enum": [
+                                          "Air Force",
+                                          "Air Force Reserves",
+                                          "Air National Guard",
+                                          "Army",
+                                          "Army National Guard",
+                                          "Army Reserves",
+                                          "Coast Guard",
+                                          "Coast Guard Reserves",
+                                          "Marine Corps",
+                                          "Marine Corps Reserves",
+                                          "National Oceanic &amp; Atmospheric Administration",
+                                          "Navy",
+                                          "Navy Reserves",
+                                          "Public Health Service",
+                                          "Air Force Academy",
+                                          "Army Air Corps or Army Air Force",
+                                          "Army Nurse Corps",
+                                          "Coast Guard Academy",
+                                          "Merchant Marine",
+                                          "Naval Academy",
+                                          "Other",
+                                          "US Military Academy",
+                                          "Women's Army Corps"
+                                        ],
+                                        "example": "Air Force"
+                                      },
+                                      "amount": {
+                                        "description": "Amount being received.",
+                                        "type": "number",
+                                        "minimum": 1,
+                                        "maximum": 999999,
+                                        "example": 100
+                                      }
+                                    }
+                                  },
+                                  "receivedDate": {
+                                    "description": "Approximate date separation pay was received.",
+                                    "type": "string",
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                    "example": "2018-03-02"
+                                  }
+                                }
                               }
                             }
                           },
@@ -3812,7 +4128,7 @@
                           "claimDate": {
                             "description": "Date when claim is being submitted to the VA.",
                             "type": "string",
-                            "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                            "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                             "example": "2018-08-28"
                           }
                         }
@@ -3908,7 +4224,7 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "45c18f76-794d-4a7e-88f2-e07ff45c48a9",
+                    "id": "d4730b83-3deb-41d5-8592-9747e099dc83",
                     "type": "claims_api_claim",
                     "attributes": {
                       "evss_id": null,
@@ -3926,13 +4242,13 @@
                       "current_phase_back": null,
                       "requested_decision": null,
                       "claim_type": null,
-                      "updated_at": "2021-06-16T15:51:29.276Z",
+                      "updated_at": "2021-08-24T19:20:03.609Z",
                       "contention_list": null,
                       "va_representative": null,
                       "events_timeline": [
 
                       ],
-                      "token": "45c18f76-794d-4a7e-88f2-e07ff45c48a9",
+                      "token": "d4730b83-3deb-41d5-8592-9747e099dc83",
                       "status": "pending",
                       "flashes": [
                         "Hardship",
@@ -4169,6 +4485,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -4223,6 +4550,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -4277,6 +4615,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -4470,6 +4819,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -4810,10 +5170,24 @@
                                 "description": "A Change of Address Object being submitted.",
                                 "type": "object",
                                 "additionalProperties": false,
+                                "required": [
+                                  "country",
+                                  "type",
+                                  "addressLine1",
+                                  "addressChangeType",
+                                  "beginningDate"
+                                ],
                                 "properties": {
                                   "beginningDate": {
                                     "description": "Date in YYYY-MM-DD the Veteran changed address.",
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                     "type": "string",
+                                    "example": "2018-06-04"
+                                  },
+                                  "endingDate": {
+                                    "description": "Date in YYYY-MM-DD the changed address expires, if change is temporary.",
+                                    "type": "string",
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                     "example": "2018-06-04"
                                   },
                                   "addressChangeType": {
@@ -4889,6 +5263,20 @@
                                   {
                                     "if": {
                                       "properties": {
+                                        "addressChangeType": {
+                                          "const": "TEMPORARY"
+                                        }
+                                      }
+                                    },
+                                    "then": {
+                                      "required": [
+                                        "endingDate"
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "if": {
+                                      "properties": {
                                         "type": {
                                           "const": "INTERNATIONAL"
                                         }
@@ -4896,12 +5284,7 @@
                                     },
                                     "then": {
                                       "required": [
-                                        "beginningDate",
-                                        "addressChangeType",
-                                        "addressLine1",
                                         "city",
-                                        "country",
-                                        "type",
                                         "internationalPostalCode"
                                       ]
                                     }
@@ -4916,13 +5299,8 @@
                                     },
                                     "then": {
                                       "required": [
-                                        "beginningDate",
-                                        "addressChangeType",
-                                        "addressLine1",
                                         "city",
-                                        "country",
                                         "zipFirstFive",
-                                        "type",
                                         "state"
                                       ]
                                     }
@@ -4937,14 +5315,9 @@
                                     },
                                     "then": {
                                       "required": [
-                                        "beginningDate",
-                                        "addressChangeType",
-                                        "addressLine1",
-                                        "country",
                                         "zipFirstFive",
                                         "militaryStateCode",
-                                        "militaryPostOfficeTypeCode",
-                                        "type"
+                                        "militaryPostOfficeTypeCode"
                                       ]
                                     }
                                   }
@@ -4954,9 +5327,12 @@
                                 "description": "Object describing Veteran Homelessness if applicable.",
                                 "type": "object",
                                 "additionalProperties": false,
-                                "required": [
-                                  "pointOfContact"
-                                ],
+                                "dependentRequired": {
+                                  "pointOfContact": [
+                                    "currentlyHomeless",
+                                    "homelessnessRisk"
+                                  ]
+                                },
                                 "properties": {
                                   "pointOfContact": {
                                     "description": "Object describing Homeless Veteran Point of Contact.",
@@ -5072,7 +5448,6 @@
                                 "uniqueItems": true,
                                 "items": {
                                   "type": "object",
-                                  "additionalProperties": false,
                                   "required": [
                                     "serviceBranch",
                                     "activeDutyBeginDate",
@@ -5085,41 +5460,42 @@
                                       "example": "Air Force",
                                       "enum": [
                                         "Air Force",
-                                        "Air Force Reserves",
                                         "Air National Guard",
                                         "Army",
                                         "Army National Guard",
-                                        "Army Reserves",
-                                        "Coast Guard",
-                                        "Coast Guard Reserves",
-                                        "Marine Corps",
-                                        "Marine Corps Reserves",
-                                        "National Oceanic &amp; Atmospheric Administration",
-                                        "Navy",
-                                        "Navy Reserves",
-                                        "Public Health Service",
-                                        "Air Force Academy",
-                                        "Army Air Corps or Army Air Force",
                                         "Army Nurse Corps",
-                                        "Coast Guard Academy",
+                                        "Coast Guard",
                                         "Merchant Marine",
-                                        "Naval Academy",
-                                        "Other",
-                                        "US Military Academy",
-                                        "Women's Army Corps"
+                                        "Navy",
+                                        "Public Health Service",
+                                        "Air Force Civilian",
+                                        "Army Air Corps",
+                                        "Commonwealth Army Veteran",
+                                        "Guerrilla Combination Service",
+                                        "Marine",
+                                        "National Oceanic and Atmospheric Administration",
+                                        "Regular Philippine Scout",
+                                        "Regular Scout Service",
+                                        "Special Philippine Scout",
+                                        "Unknown",
+                                        "Woman Air Corps"
                                       ]
                                     },
                                     "activeDutyBeginDate": {
                                       "description": "Date Started Active Duty.",
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                       "example": "1980-02-05"
                                     },
                                     "activeDutyEndDate": {
                                       "description": "Date Completed Active Duty.",
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                       "example": "1990-01-02"
+                                    },
+                                    "separationLocationCode": {
+                                      "type": "string",
+                                      "example": "98283"
                                     }
                                   }
                                 }
@@ -5138,11 +5514,11 @@
                                   "properties": {
                                     "confinementBeginDate": {
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                     },
                                     "confinementEndDate": {
                                       "type": "string",
-                                      "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                      "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                     }
                                   }
                                 }
@@ -5169,21 +5545,21 @@
                                     "properties": {
                                       "anticipatedSeparationDate": {
                                         "type": "string",
-                                        "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                        "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                       },
                                       "title10ActivationDate": {
                                         "type": "string",
-                                        "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                        "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                       }
                                     }
                                   },
                                   "obligationTermOfServiceFromDate": {
                                     "type": "string",
-                                    "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                   },
                                   "obligationTermOfServiceToDate": {
                                     "type": "string",
-                                    "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                                   },
                                   "unitName": {
                                     "type": "string"
@@ -5442,9 +5818,7 @@
                                   "enum": [
                                     "NONE",
                                     "NEW",
-                                    "SECONDARY",
-                                    "INCREASE",
-                                    "REOPEN"
+                                    "INCREASE"
                                   ],
                                   "example": "NEW"
                                 },
@@ -5479,8 +5853,7 @@
                                           "NONE",
                                           "NEW",
                                           "SECONDARY",
-                                          "INCREASE",
-                                          "REOPEN"
+                                          "INCREASE"
                                         ],
                                         "example": "SECONDARY"
                                       },
@@ -5660,6 +6033,23 @@
                                     }
                                   }
                                 }
+                              },
+                              "if": {
+                                "properties": {
+                                  "disabilityActionType": {
+                                    "enum": [
+                                      "INCREASE"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "disabilityActionType"
+                                ]
+                              },
+                              "then": {
+                                "required": [
+                                  "ratedDisabilityId"
+                                ]
                               }
                             }
                           },
@@ -5681,13 +6071,13 @@
                                 "startDate": {
                                   "description": "Date Veteran started treatment.",
                                   "type": "string",
-                                  "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                   "example": "2018-03-02"
                                 },
                                 "endDate": {
                                   "description": "Date Veteran ended treatment.",
                                   "type": "string",
-                                  "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                                  "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                                   "example": "2018-03-02"
                                 },
                                 "treatedDisabilityNames": {
@@ -5730,11 +6120,6 @@
                             "description": "Details about Veteran receiving Service Pay from DoD.",
                             "type": "object",
                             "additionalProperties": false,
-                            "required": [
-                              "waiveVABenefitsToRetainTrainingPay",
-                              "waiveVABenefitsToRetainRetiredPay",
-                              "militaryRetiredPay"
-                            ],
                             "properties": {
                               "waiveVABenefitsToRetainTrainingPay": {
                                 "description": "Is Veteran Waiving benefits to retain training pay.",
@@ -5756,9 +6141,15 @@
                                 ],
                                 "properties": {
                                   "receiving": {
-                                    "description": "Is Veteran getting Retiree pay.",
+                                    "description": "Is Veteran getting Retiree pay?",
                                     "type": "boolean",
                                     "example": true
+                                  },
+                                  "willReceiveInFuture": {
+                                    "description": "Will Veteran get Retiree pay in future?",
+                                    "type": "boolean",
+                                    "default": false,
+                                    "example": false
                                   },
                                   "payment": {
                                     "description": "Part of DoD paying Retirement Benefits.",
@@ -5797,13 +6188,112 @@
                                           "Women's Army Corps"
                                         ],
                                         "example": "Air Force"
+                                      },
+                                      "amount": {
+                                        "description": "Amount being received.",
+                                        "type": "number",
+                                        "minimum": 1,
+                                        "maximum": 999999,
+                                        "example": 100
                                       }
                                     }
+                                  },
+                                  "willReceiveInfuture": {
+                                    "description": "Will military retired pay be received in the future?",
+                                    "type": "boolean",
+                                    "default": false,
+                                    "example": false
+                                  },
+                                  "futurePayExplanation": {
+                                    "description": "Explains why future pay will be received.",
+                                    "type": "string",
+                                    "example": "Will be retiring soon."
                                   }
+                                },
+                                "if": {
+                                  "properties": {
+                                    "willReceiveInFuture": {
+                                      "const": true
+                                    }
+                                  },
+                                  "required": [
+                                    "willReceiveInFuture"
+                                  ]
+                                },
+                                "then": {
+                                  "required": [
+                                    "futurePayExplanation"
+                                  ]
                                 }
                               },
                               "hasSeparationPay": {
                                 "type": "boolean"
+                              },
+                              "separationPay": {
+                                "description": "Details about separation pay.",
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "received"
+                                ],
+                                "properties": {
+                                  "received": {
+                                    "description": "Has separation pay been received?",
+                                    "type": "boolean",
+                                    "example": true,
+                                    "default": true
+                                  },
+                                  "payment": {
+                                    "description": "Separation pay payment details.",
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "serviceBranch": {
+                                        "description": "Branch of Service making payments.",
+                                        "type": "string",
+                                        "enum": [
+                                          "Air Force",
+                                          "Air Force Reserves",
+                                          "Air National Guard",
+                                          "Army",
+                                          "Army National Guard",
+                                          "Army Reserves",
+                                          "Coast Guard",
+                                          "Coast Guard Reserves",
+                                          "Marine Corps",
+                                          "Marine Corps Reserves",
+                                          "National Oceanic &amp; Atmospheric Administration",
+                                          "Navy",
+                                          "Navy Reserves",
+                                          "Public Health Service",
+                                          "Air Force Academy",
+                                          "Army Air Corps or Army Air Force",
+                                          "Army Nurse Corps",
+                                          "Coast Guard Academy",
+                                          "Merchant Marine",
+                                          "Naval Academy",
+                                          "Other",
+                                          "US Military Academy",
+                                          "Women's Army Corps"
+                                        ],
+                                        "example": "Air Force"
+                                      },
+                                      "amount": {
+                                        "description": "Amount being received.",
+                                        "type": "number",
+                                        "minimum": 1,
+                                        "maximum": 999999,
+                                        "example": 100
+                                      }
+                                    }
+                                  },
+                                  "receivedDate": {
+                                    "description": "Approximate date separation pay was received.",
+                                    "type": "string",
+                                    "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+                                    "example": "2018-03-02"
+                                  }
+                                }
                               }
                             }
                           },
@@ -5870,7 +6360,7 @@
                           "claimDate": {
                             "description": "Date when claim is being submitted to the VA.",
                             "type": "string",
-                            "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$",
+                            "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
                             "example": "2018-08-28"
                           }
                         }
@@ -5966,7 +6456,7 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "94d8eb96-7987-4b16-8ae6-ce220bf8d2e9",
+                    "id": "e36634ec-6863-4cd5-8f35-5b39d21b2e05",
                     "type": "claims_api_claim",
                     "attributes": {
                       "evss_id": null,
@@ -5980,7 +6470,7 @@
                       "decision_letter_sent": null,
                       "requested_decision": null,
                       "claim_type": null,
-                      "updated_at": "2021-06-16T15:51:29.919Z",
+                      "updated_at": "2021-08-24T19:20:04.418Z",
                       "contention_list": null,
                       "va_representative": null,
                       "events_timeline": [
@@ -5989,7 +6479,7 @@
                       "status": "pending",
                       "supporting_documents": [
                         {
-                          "id": "cc9f9267-e5f2-4d59-9ed5-36726e2e1190",
+                          "id": "27f52d8a-56d9-4576-9afd-440c92cc960e",
                           "type": "claim_supporting_document",
                           "md5": null,
                           "filename": null,
@@ -6253,6 +6743,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -6307,6 +6808,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -6588,6 +7100,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -6605,7 +7128,7 @@
                   "errors": [
                     {
                       "title": "Forbidden",
-                      "detail": "Representative cannot file for type 'burial'",
+                      "detail": "Veteran cannot file for type 'burial'",
                       "code": "403",
                       "status": "403"
                     }
@@ -6642,6 +7165,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -6847,11 +7381,11 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "184000",
+                    "id": "183042",
                     "type": "intent_to_file",
                     "attributes": {
-                      "creation_date": null,
-                      "expiration_date": "2021-08-04T11:11:14.000-05:00",
+                      "creation_date": "2020-06-05T11:24:28.000-05:00",
+                      "expiration_date": "2021-06-05T11:24:28.000-05:00",
                       "type": "compensation",
                       "status": "active"
                     }
@@ -6971,6 +7505,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -7025,6 +7570,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -7079,6 +7635,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -7254,6 +7821,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -7732,7 +8310,7 @@
                             "appointmentDate": {
                               "description": "Date of appointment with Veteran.",
                               "type": "string",
-                              "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                              "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                             }
                           }
                         },
@@ -7858,11 +8436,11 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "dbe2409f-f48f-4ab5-b7a9-fda0fdff34e9",
+                    "id": "d9c459c0-b9ef-4349-b8b8-3b230d933f2b",
                     "type": "claims_api_power_of_attorneys",
                     "attributes": {
                       "status": "pending",
-                      "date_request_accepted": "2021-06-16",
+                      "date_request_accepted": "2021-08-24",
                       "representative": {
                         "service_organization": {
                           "poa_code": "074"
@@ -8002,6 +8580,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -8421,7 +9010,7 @@
                               "appointmentDate": {
                                 "description": "Date of appointment with Veteran.",
                                 "type": "string",
-                                "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                               }
                             }
                           },
@@ -8560,11 +9149,11 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "8e700d7b-6e93-4478-8bb4-e1a3e1434fa4",
+                    "id": "c3cac6b8-b4d8-4d17-b34e-36788a0d0a36",
                     "type": "claims_api_power_of_attorneys",
                     "attributes": {
                       "status": "submitted",
-                      "date_request_accepted": "2021-06-16",
+                      "date_request_accepted": "2021-08-24",
                       "representative": {
                         "service_organization": {
                           "poa_code": "074"
@@ -8704,6 +9293,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -8758,6 +9358,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -8863,11 +9474,11 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "53868f9a-ea44-4ede-ae5b-b145018ca138",
+                    "id": "4c49f556-b60f-4d59-9c30-b0b6f5ab81eb",
                     "type": "claims_api_power_of_attorneys",
                     "attributes": {
                       "status": "submitted",
-                      "date_request_accepted": "2021-06-16",
+                      "date_request_accepted": "2021-08-24",
                       "representative": {
                         "service_organization": {
                           "poa_code": "074"
@@ -9007,6 +9618,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -9061,6 +9683,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -9322,6 +9955,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -9376,6 +10020,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -9553,6 +10208,17 @@
                           "status": {
                             "type": "string",
                             "description": "HTTP error code"
+                          },
+                          "source": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Source of error",
+                            "properties": {
+                              "pointer": {
+                                "type": "string",
+                                "description": "Pointer to source of error"
+                              }
+                            }
                           }
                         }
                       }
@@ -9972,7 +10638,7 @@
                               "appointmentDate": {
                                 "description": "Date of appointment with Veteran.",
                                 "type": "string",
-                                "pattern": "^(\\d{4}|XXXX)-(0[1-9]|1[0-2]|XX)-(0[1-9]|[1-2][0-9]|3[0-1]|XX)$"
+                                "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$"
                               }
                             }
                           },
