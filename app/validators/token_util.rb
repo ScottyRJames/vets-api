@@ -16,9 +16,9 @@ class TokenUtil
   end
 
   def self.valid_issuer?(token)
-    iss = token.payload['iss']
+    iss = token.payload['iss'] if token.payload
     !iss.nil? && iss.match?(%r{^#{Regexp.escape(Settings.oidc.issuer_prefix)}/\w+$})
-  rescue JWT::DecodeError => e
+  rescue e
     raise error_klass(e.message)
   end
 
