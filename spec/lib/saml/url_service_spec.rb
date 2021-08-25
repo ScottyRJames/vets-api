@@ -24,7 +24,7 @@ RSpec.describe SAML::URLService do
     SAML::URLService::VIRTUAL_HOST_MAPPINGS.each do |vhost_url, values|
       context "virtual host: #{vhost_url}" do
         let(:saml_settings) do
-          build(:settings_no_context, assertion_consumer_service_url: "#{vhost_url}/auth/saml/callback")
+          build(:settings_no_context, assertion_consumer_service_url: "#{vhost_url}/v1/sessions/callback")
         end
 
         let(:params) { { action: 'new' } }
@@ -255,7 +255,7 @@ RSpec.describe SAML::URLService do
     SAML::URLService::VIRTUAL_HOST_MAPPINGS.each do |vhost_url, values|
       context "virtual host: #{vhost_url}" do
         let(:saml_settings) do
-          build(:settings_no_context, assertion_consumer_service_url: "#{vhost_url}/auth/saml/callback")
+          build(:settings_no_context, assertion_consumer_service_url: "#{vhost_url}/v1/sessions/callback")
         end
 
         let(:params) { { action: 'new' } }
