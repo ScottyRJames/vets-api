@@ -39,7 +39,6 @@ module Mobile
 
         def generate_hash(appointment_hash, location)
           start_date_utc = start_date(appointment_hash[:appointment_time], appointment_hash[:time_zone]).utc
-          time_zone = time_zone(appointment_hash[:time_zone], location.dig(:address, :state))
           start_date_local = start_date_utc.in_time_zone(time_zone)
 
           {
@@ -57,7 +56,7 @@ module Mobile
             start_date_utc: start_date_utc,
             status: BOOKED_STATUS,
             status_detail: nil, # not currently used by community care appointments
-            time_zone: time_zone,
+            time_zone: time_zone(appointment_hash[:time_zone], location.dig(:address, :state)),
             vetext_id: nil
           }
         end
