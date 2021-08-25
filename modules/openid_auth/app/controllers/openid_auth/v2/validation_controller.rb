@@ -67,11 +67,7 @@ module OpenidAuth
       def validated_payload
         # Ensure the token has `act` and `launch` keys.
         payload_object = setup_structure
-        if token.static?
-          payload_object.act[:icn] = payload_object.icn if payload_object.icn
-          payload_object.launch[:patient] = nil
-          return payload_object
-        end
+        return populate_static_structure(payload_object) if token.static?
 
         if token.ssoi_token?
           payload_object = populate_act_payload(payload_object)
@@ -91,6 +87,12 @@ module OpenidAuth
           payload_object.launch[:patient] = @current_user.icn
         end
 
+        payload_object
+      end
+
+      def populate_static_structure(payload_object)
+        payload_object.act[:icn] = payload_object.icn if payload_object.icn
+        payload_object.launch[:patient] = nil
         payload_object
       end
 
