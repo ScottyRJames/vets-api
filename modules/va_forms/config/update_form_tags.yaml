@@ -1,17 +1,40 @@
 ---
 form tags list:
-- tags: tdiu  iu individual unemployability unemployment application increased compensation
-    occupation hospitalized hospitalization injury service connected disability condition
-    contention self-employment employer claim work income
+- tags:
+  - tdiu
+  - iu
+  - individual
+  - unemployability
+  - unemployment
+  - application
+  - increased
+  - compensation
+  - occupation
+  - hospitalized
+  - hospitalization
+  - injury
+  - service
+  - connected
+  - disability
+  - condition
+  - contention
+  - self-employment
+  - employer
+  - claim
+  - work
+  - income
   form_names:
   - 21-8940
-- tags: coe
+- tags: 
+  - coe
   form_names:
   - 26-1880
-- tags: rfs
+- tags:
+  - rfs
   form_names:
   - 10-10172
-- tags: roi
+- tags:
+  - roi
   form_names:
   - va0710
   - 10-252
@@ -24,45 +47,58 @@ form tags list:
   - 10-0527
   - 10-0525a
   - 10-0493
-- tags: poi
+- tags: 
+  - poi
   form_names:
   - 10-0137
-- tags: 21-0966
+- tags:
+  - 21-0966
   form_names:
   - itf
-- tags: 21p-535
+- tags:
+  - 21p-535
   form_names:
   - dic
-- tags: rn
+- tags:
+  - rn
   form_names:
   - 10-2850a
   - 10-0430
-- tags: headstone
+- tags:
+  - headstone
   form_names:
   - 21p-530
   - va40-10007
   - 21p-10196
-- tags: vehicle car
+- tags:
+  - vehicle
+  - car
   form_names:
   - 10-1394
   - 10-2511
-- tags: caretaker
+- tags:
+  - caretaker
   form_names:
   - 10-10cg
-- tags: dea
+- tags:
+  - dea
   form_names:
   - 22-5490
-- tags: hippa
+- tags:
+  - hippa
   form_names:
   - 10-252
   - 10-10163
   - 10-10164
   - 10-0527
   - 10-10116
-- tags: pcafc
+- tags:
+  - pcafc
   form_names:
   - 10-10cg
-- tags: vr vrne
+- tags:
+  - vr
+  - vrne
   form_names:
   - 28-0588
   - 28-1900
