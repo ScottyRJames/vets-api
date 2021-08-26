@@ -42,7 +42,6 @@ RSpec.describe V0::SessionsController, type: :controller do
   end
 
   let(:login_uuid) { '5678' }
-  let(:decrypter) { Aes256CbcEncryptor.new(Settings.sso.cookie_key, Settings.sso.cookie_iv) }
   let(:authn_context) { LOA::IDME_LOA1_VETS }
   let(:valid_saml_response) do
     build_saml_response(
@@ -176,19 +175,12 @@ RSpec.describe V0::SessionsController, type: :controller do
     describe 'new' do
       context 'all routes' do
         %w[mhv dslogon idme mfa verify slo].each do |type|
-          around do |example|
-            Settings.sso.cookie_enabled = true
-            example.run
-            Settings.sso.cookie_enabled = false
-          end
-
           context "routes /sessions/#{type}/new to SessionsController#new with type: #{type}" do
             it 'redirects' do
               expect { get(:new, params: { type: type }) }
                 .to trigger_statsd_increment(described_class::STATSD_SSO_NEW_KEY,
                                              tags: ["context:#{type}", 'version:v0'], **once)
               expect(response).to have_http_status(:found)
-              expect(cookies['vagov_session_dev']).not_to be_nil unless type.in?(%w[mhv dslogon idme slo])
             end
           end
         end
@@ -203,13 +195,6 @@ RSpec.describe V0::SessionsController, type: :controller do
         allow(MHVAccount).to receive(:find_or_initialize_by).and_return(mhv_account)
         allow(OneLogin::RubySaml::Logoutrequest).to receive(:new).and_return(logout_request)
         Session.find(token).to_hash.each { |k, v| session[k] = v }
-        cookies['vagov_session_dev'] = 'bar'
-      end
-
-      around do |example|
-        Settings.sso.cookie_enabled = true
-        example.run
-        Settings.sso.cookie_enabled = false
       end
 
       context 'can find an active session' do
@@ -220,8 +205,7 @@ RSpec.describe V0::SessionsController, type: :controller do
 
           # this should not exist yet
           expect(SingleLogoutRequest.find(logout_request.uuid)).to be_nil
-          # it has the cookie set
-          expect(cookies['vagov_session_dev']).not_to be_nil
+
           get(:new, params: { type: 'slo' })
           expect(response.location)
             .to eq('https://int.eauth.va.gov/slo/globallogout?appKey=https%253A%252F%252Fssoe-sp-dev.va.gov')
@@ -230,7 +214,6 @@ RSpec.describe V0::SessionsController, type: :controller do
           expect(Session.find(token)).to be_nil
           expect(session).to be_empty
           expect(User.find(uuid)).to be_nil
-          expect(cookies['vagov_session_dev']).to be_nil
 
           # this should be created in redis
           expect(SingleLogoutRequest.find(logout_request.uuid)).to be_nil
@@ -322,14 +305,7 @@ RSpec.describe V0::SessionsController, type: :controller do
     end
 
     describe 'POST saml_callback' do
-      around do |example|
-        Settings.sso.cookie_enabled = true
-        example.run
-        Settings.sso.cookie_enabled = false
-      end
-
       it 'sets the session cookie' do
-        Settings.sso.cookie_enabled = false
         post :saml_callback
         verify_session_cookie
       end
@@ -376,13 +352,6 @@ RSpec.describe V0::SessionsController, type: :controller do
           expect(new_user.loa).to eq(highest: LOA::THREE, current: LOA::THREE)
           expect(new_user.multifactor).to be_falsey
           expect(new_user.last_signed_in).not_to eq(existing_user.last_signed_in)
-          expect(cookies['vagov_session_dev']).not_to be_nil
-          expect(JSON.parse(decrypter.decrypt(cookies['vagov_session_dev'])))
-            .to eq('patientIcn' => loa3_user.icn,
-                   'mhvCorrelationId' => loa3_user.mhv_correlation_id,
-                   'signIn' => { 'serviceName' => 'idme' },
-                   'credential_used' => 'id_me',
-                   'expirationTime' => cookie_expiration_time)
           Timecop.return
         end
       end
@@ -430,26 +399,6 @@ RSpec.describe V0::SessionsController, type: :controller do
             )
           Timecop.return
         end
-
-        # keeping this spec round to easily test out the testing attributes
-        xit 'has a cookie, which includes the testing values', :aggregate_failures do
-          Timecop.freeze(Time.current)
-          with_settings(Settings.sso, testing: true) do
-            @cookie_expiration_time = 30.minutes.from_now.iso8601(0)
-            post :saml_callback
-          end
-
-          expect(cookies['vagov_session_dev']).not_to be_nil
-          expect(JSON.parse(decrypter.decrypt(cookies['vagov_session_dev'])))
-            .to eq(
-              'patientIcn' => nil,
-              'mhvCorrelationId' => nil,
-              'signIn' => { 'serviceName' => 'idme' },
-              'credential_used' => 'id_me',
-              'expirationTime' => @cookie_expiration_time
-            )
-          Timecop.return
-        end
       end
 
       context 'when user has LOA current 1 and highest 3' do
@@ -461,25 +410,6 @@ RSpec.describe V0::SessionsController, type: :controller do
 
         it 'redirects to idme for up-level' do
           expect(post(:saml_callback)).to redirect_to(/api.idmelabs.com/)
-        end
-
-        it 'redirects to identity proof URL', :aggregate_failures do
-          Timecop.freeze(Time.current)
-          expect_any_instance_of(SAML::URLService).to receive(:verify_url)
-          cookie_expiration_time = 30.minutes.from_now.iso8601(0)
-
-          post :saml_callback
-
-          expect(cookies['vagov_session_dev']).not_to be_nil
-          expect(JSON.parse(decrypter.decrypt(cookies['vagov_session_dev'])))
-            .to eq(
-              'patientIcn' => nil,
-              'mhvCorrelationId' => nil,
-              'signIn' => { 'serviceName' => 'idme' },
-              'credential_used' => 'id_me',
-              'expirationTime' => cookie_expiration_time
-            )
-          Timecop.return
         end
 
         it 'sends STATSD callback metrics' do
