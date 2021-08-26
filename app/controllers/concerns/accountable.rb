@@ -14,7 +14,26 @@ module Accountable
     log e
   end
 
+  def update_account_login_stats
+    return unless login_stats.present? && login_type.in?(AccountLoginStat::LOGIN_TYPES)
+
+    login_stats.update("#{login_type}_at" => Time.zone.now)
+  end
+
   private
+
+  def login_stats
+    @login_stats ||=
+      if @current_user.account.blank?
+        nil
+      else
+        AccountLoginStat.find_or_initialize_by(account_id: @current_user.account.id)
+      end
+  end
+
+  def login_type
+    @login_type ||= @current_user.identity.sign_in[:service_name]
+  end
 
   def log(error)
     log_exception_to_sentry(
