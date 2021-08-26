@@ -607,14 +607,14 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
     end
   end
 
-  context 'static token from issued' do
-    it 'static token from ussued ok' do
-      allow(RestClient).to receive(:get).and_return(issued_static_response)
-
-      post '/internal/auth/v2/validation',
-           params: { aud: %w[https://example.com/xxxxxxservices/xxxxx] },
-           headers: auth_header
-      expect(response).to have_http_status(:ok)
-    end
-  end
+  # context 'static token from issued' do
+  #   it 'static token from ussued ok' do
+  #     allow(RestClient).to receive(:get).and_return(issued_static_response)
+  #
+  #     post '/internal/auth/v2/validation',
+  #          params: { aud: %w[https://example.com/xxxxxxservices/xxxxx] },
+  #          headers: auth_header
+  #     expect(response).to have_http_status(:ok)
+  #   end
+  # end
 end

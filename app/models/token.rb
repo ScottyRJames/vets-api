@@ -77,7 +77,7 @@ class Token
   end
 
   def static?
-    payload && payload['static']
+    false
   end
 
   def identifiers

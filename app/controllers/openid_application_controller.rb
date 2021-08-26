@@ -118,7 +118,7 @@ class OpenidApplicationController < ApplicationController
       Token.new(token_string, fetch_aud)
     else
       # Handle opaque token
-      handle_opaque_token(token_string, fetch_aud)
+      handle_opaque_token(token_string, fetch_aud) if Settings.oidc.issued_url
       begin
       rescue e
         raise error_klass('Invalid token.')
