@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require_relative '../../../modules/claims_api/spec/support/fake_vbms'
 
 RSpec.describe SavedClaim::VeteranReadinessEmploymentClaim do
   let(:claim) { create(:veteran_readiness_employment_claim) }
@@ -56,6 +57,24 @@ RSpec.describe SavedClaim::VeteranReadinessEmploymentClaim do
   end
 
   describe '#send_to_vre' do
+    context 'when VBMS response is VBMSDownForMaintenance' do
+      before do
+        @vbms_client = FakeVBMS.new
+        allow(VBMS::Client).to receive(:from_env_vars).and_return(@vbms_client)
+      end
+
+      fit 'calls #send_to_central_mail!' do
+        VCR.use_cassette('vbms/document_upload_417') do
+          claim.send_to_vre(user_object)
+          expect(claim).to receive(:send_to_central_mail!)
+        end
+      end
+
+      xit 'does not raise an error' do
+        expect(subject).not_to raise_error
+      end
+    end
+
     context 'when VBMS upload is successful' do
       before { expect(ClaimsApi::VBMSUploader).to receive(:new) { OpenStruct.new(upload!: true) } }
 
