@@ -58,6 +58,7 @@ RSpec.describe SavedClaim::VeteranReadinessEmploymentClaim do
 
   describe '#send_to_vre' do
     subject { claim.send_to_vre(user_object) }
+
     context 'when VBMS response is VBMSDownForMaintenance' do
       before do
         @vbms_client = FakeVBMS.new
