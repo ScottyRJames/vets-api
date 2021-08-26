@@ -57,21 +57,24 @@ RSpec.describe SavedClaim::VeteranReadinessEmploymentClaim do
   end
 
   describe '#send_to_vre' do
+    subject { claim.send_to_vre(user_object) }
     context 'when VBMS response is VBMSDownForMaintenance' do
       before do
         @vbms_client = FakeVBMS.new
         allow(VBMS::Client).to receive(:from_env_vars).and_return(@vbms_client)
       end
 
-      fit 'calls #send_to_central_mail!' do
+      it 'calls #send_to_central_mail!' do
         VCR.use_cassette('vbms/document_upload_417') do
           expect(claim).to receive(:send_to_central_mail!)
-          claim.send_to_vre(user_object)
+          subject
         end
       end
 
-      xit 'does not raise an error' do
-        expect(subject).not_to raise_error
+      it 'does not raise an error' do
+        VCR.use_cassette('vbms/document_upload_417') do
+          expect { subject }.not_to raise_error
+        end
       end
     end
 
