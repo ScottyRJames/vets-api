@@ -97,6 +97,7 @@ class OpenidApplicationController < ApplicationController
     opaque_token.set_payload(fetch_issued(token_string))
 
     opaque_token if TokenUtil.validate_token(opaque_token)
+    raise error_klass('Invalid token.')
   end
 
   def populate_ssoi_token_payload(profile)
@@ -118,6 +119,10 @@ class OpenidApplicationController < ApplicationController
     else
       # Handle opaque token
       handle_opaque_token(token_string, fetch_aud)
+      begin
+      rescue e
+        raise error_klass('Invalid token.')
+      end
     end
   end
 
