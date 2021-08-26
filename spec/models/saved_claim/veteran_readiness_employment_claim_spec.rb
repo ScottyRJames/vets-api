@@ -65,8 +65,8 @@ RSpec.describe SavedClaim::VeteranReadinessEmploymentClaim do
 
       fit 'calls #send_to_central_mail!' do
         VCR.use_cassette('vbms/document_upload_417') do
-          claim.send_to_vre(user_object)
           expect(claim).to receive(:send_to_central_mail!)
+          claim.send_to_vre(user_object)
         end
       end
 
