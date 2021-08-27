@@ -109,7 +109,11 @@ class SavedClaim::VeteranReadinessEmploymentClaim < SavedClaim
   def send_to_vre(user)
     prepare_form_data
 
-    upload_to_vbms
+    begin
+      upload_to_vbms
+    rescue VBMS::DownForMaintenance
+      send_to_central_mail!
+    end
 
     @office_location = check_office_location[0] if @office_location.nil?
 
