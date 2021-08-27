@@ -8,6 +8,7 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
   include SchemaMatchers
 
   let(:token) { 'token' }
+  let(:hashed_token) { '3c469e9d6c5875d37a43f353d4f88e61fcf812c66eee3457465a40b0da4153e0' }
   let(:jwt) do
     [{
       'ver' => 1,
@@ -432,7 +433,7 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
 
     it 'v2 POST returns true if the user is a veteran using cache' do
       with_okta_configured do
-        Session.create(token: token, launch: '73806470379396828')
+        Session.create(token: hashed_token, launch: '73806470379396828')
         post '/internal/auth/v2/validation', params: nil, headers: auth_header
         expect(response).to have_http_status(:ok)
         expect(response.body).to be_a(String)
@@ -446,7 +447,7 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
   context 'with client credentials jwt launch session' do
     before do
       allow(JWT).to receive(:decode).and_return(client_credentials_launch_jwt)
-      Session.create(token: token, launch: '123V456')
+      Session.create(token: hashed_token, launch: '123V456')
     end
 
     it 'v2 POST returns true if the user is a veteran using cache' do
@@ -593,16 +594,18 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
 
     it 'v2 POST returns json response if valid user charon session' do
       with_ssoi_charon_configured do
-        allow(RestClient).to receive(:get).and_return(launch_with_sta3n_response)
+        VCR.use_cassette('charon/success') do
+          allow(RestClient).to receive(:get).and_return(launch_with_sta3n_response)
 
-        post '/internal/auth/v2/validation',
-             params: { aud: %w[https://example.com/xxxxxxservices/xxxxx] },
-             headers: auth_header
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to be_a(String)
-        expect(JSON.parse(response.body)['data']['attributes'].keys)
-          .to eq(json_api_response_vista_id['data']['attributes'].keys)
-        expect(JSON.parse(response.body)['data']['attributes']['launch']['sta3n']).to eq('456')
+          post '/internal/auth/v2/validation',
+               params: { aud: %w[https://example.com/xxxxxxservices/xxxxx] },
+               headers: auth_header
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to be_a(String)
+          expect(JSON.parse(response.body)['data']['attributes'].keys)
+            .to eq(json_api_response_vista_id['data']['attributes'].keys)
+          expect(JSON.parse(response.body)['data']['attributes']['launch']['sta3n']).to eq('456')
+        end
       end
     end
   end
