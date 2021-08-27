@@ -2,9 +2,9 @@
 
 class TokenUtil
   def self.validate_token(token)
+    raise error_klass('Invalid audience') unless TokenUtil.valid_audience?(token)
     return true if token.static?
-    return false unless TokenUtil.valid_issuer?(token)
-    return false unless TokenUtil.valid_audience?(token)
+    raise error_klass('Invalid issuer') unless TokenUtil.valid_issuer?(token)
 
     true
   end

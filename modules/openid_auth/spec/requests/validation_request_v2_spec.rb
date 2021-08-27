@@ -274,6 +274,7 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
   end
   let(:auth_header) { { 'Authorization' => "Bearer #{token}" } }
   let(:static_auth_header) { { 'Authorization' => "Bearer #{static_token}" } }
+  let(:invalid_auth_header) { { 'Authorization' => 'Bearer invalid-token' } }
   let(:user) { OpenidUser.new(build(:user_identity_attrs, :loa3)) }
 
   context 'with valid responses' do
@@ -622,6 +623,20 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
              params: { aud: %w[https://example.com/xxxxxxservices/xxxxx] },
              headers: static_auth_header
         expect(response).to have_http_status(:ok)
+      end
+    end
+
+    it 'static token from issued aud mismatch' do
+      allow(RestClient).to receive(:get).and_return(issued_static_response)
+      with_settings(
+        Settings.oidc, issued_url: 'http://example.com/issued'
+      ) do
+        post '/internal/auth/v2/validation',
+             params: { aud: %w[https://example.com/xxxxxxservices/mismatch] },
+             headers: static_auth_header
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)['errors'].first['code']).to eq '401'
+        expect(JSON.parse(response.body)['errors'].first['detail']).to eq 'Invalid audience'
       end
     end
   end
