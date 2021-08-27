@@ -93,7 +93,7 @@ module OpenidAuth
       def populate_static_structure(payload_object)
         if payload_object.scp.include?('launch') || payload_object.scp.include?('launch/patient')
           payload_object.act[:icn] = payload_object.icn if payload_object.icn
-          payload_object.launch[:patient] = nil
+          payload_object.launch[:patient] = payload_object.icn if payload_object.icn
         end
         payload_object
       end

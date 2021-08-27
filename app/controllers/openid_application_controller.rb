@@ -38,7 +38,7 @@ class OpenidApplicationController < ApplicationController
     # Static token gets a pass
     return true if token.static?
 
-    # For now opaque tokens are static
+    # For now only opaque tokens are static
     return false if token.opaque?
 
     # Only want to fetch the Okta profile if the session isn't already established and not a CC token
@@ -96,7 +96,8 @@ class OpenidApplicationController < ApplicationController
     opaque_token = OpaqueToken.new(token_string, aud)
     opaque_token.set_payload(fetch_issued(token_string))
 
-    opaque_token if TokenUtil.validate_token(opaque_token)
+    return opaque_token if TokenUtil.validate_token(opaque_token)
+
     raise error_klass('Invalid token.')
   end
 
@@ -118,11 +119,9 @@ class OpenidApplicationController < ApplicationController
       Token.new(token_string, fetch_aud)
     else
       # Handle opaque token
-      handle_opaque_token(token_string, fetch_aud) if Settings.oidc.issued_url
-      begin
-      rescue e
-        raise error_klass('Invalid token.')
-      end
+      return handle_opaque_token(token_string, fetch_aud) if Settings.oidc.issued_url
+
+      raise error_klass('Invalid token.')
     end
   end
 

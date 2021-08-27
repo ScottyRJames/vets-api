@@ -9,6 +9,7 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
 
   let(:token) { 'token' }
   let(:hashed_token) { '3c469e9d6c5875d37a43f353d4f88e61fcf812c66eee3457465a40b0da4153e0' }
+  let(:static_token) { '123456789' }
   let(:jwt) do
     [{
       'ver' => 1,
@@ -111,7 +112,7 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
     instance_double(RestClient::Response,
                     code: 200,
                     body: { static: true, aud: 'https://example.com/xxxxxxservices/xxxxx', icn: '1234678',
-                            scopes: 'launch launch/patient' }.to_json)
+                            scopes: 'patient/Patient.read launch/patient' }.to_json)
   end
 
   let(:launch_response) do
@@ -272,6 +273,7 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
     }
   end
   let(:auth_header) { { 'Authorization' => "Bearer #{token}" } }
+  let(:static_auth_header) { { 'Authorization' => "Bearer #{static_token}" } }
   let(:user) { OpenidUser.new(build(:user_identity_attrs, :loa3)) }
 
   context 'with valid responses' do
@@ -610,14 +612,17 @@ RSpec.describe 'Validated Token API endpoint', type: :request, skip_emis: true d
     end
   end
 
-  # context 'static token from issued' do
-  #   it 'static token from ussued ok' do
-  #     allow(RestClient).to receive(:get).and_return(issued_static_response)
-  #
-  #     post '/internal/auth/v2/validation',
-  #          params: { aud: %w[https://example.com/xxxxxxservices/xxxxx] },
-  #          headers: auth_header
-  #     expect(response).to have_http_status(:ok)
-  #   end
-  # end
+  context 'static token from issued' do
+    it 'static token from issued ok' do
+      allow(RestClient).to receive(:get).and_return(issued_static_response)
+      with_settings(
+        Settings.oidc, issued_url: 'http://example.com/issued'
+      ) do
+        post '/internal/auth/v2/validation',
+             params: { aud: %w[https://example.com/xxxxxxservices/xxxxx] },
+             headers: static_auth_header
+        expect(response).to have_http_status(:ok)
+      end
+    end
+  end
 end
