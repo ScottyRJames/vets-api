@@ -9,6 +9,8 @@ class TokenUtil
     true
   end
 
+  # Validates the token audience against the service caller supplied `aud` payload.
+  # If none, it validates against the configured default.
   def self.valid_audience?(token)
     if token.aud.nil?
       token.payload['aud'] == Settings.oidc.isolated_audience.default
@@ -18,6 +20,7 @@ class TokenUtil
     end
   end
 
+  # Validates the token issuer is a valid issuer configured in the Settings.oidc list.
   def self.valid_issuer?(token)
     iss = token.payload['iss'] if token.payload
     !iss.nil? && iss.match?(%r{^#{Regexp.escape(Settings.oidc.issuer_prefix)}/\w+$})
