@@ -65,11 +65,6 @@ Rails.application.routes.draw do
     resource :decision_review_evidence, only: :create
     resource :upload_supporting_evidence, only: :create
 
-    resource :sessions, only: [] do
-      post :saml_callback, to: 'sessions#saml_callback'
-      post :saml_slo_callback, to: 'sessions#saml_slo_callback'
-    end
-
     resource :user, only: [:show]
     resource :post911_gi_bill_status, only: [:show]
     resource :vso_appointments, only: [:create]
