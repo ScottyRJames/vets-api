@@ -106,6 +106,7 @@ class SavedClaim::VeteranReadinessEmploymentClaim < SavedClaim
     updated_form['veteranInformation']&.merge!({ 'regionalOffice' => "#{@office_location} - #{office_name}" })
   end
 
+  # rubocop:disable Metrics/MethodLength
   def send_to_vre(user)
     prepare_form_data
     begin
@@ -138,6 +139,7 @@ class SavedClaim::VeteranReadinessEmploymentClaim < SavedClaim
     service = VRE::Ch31Form.new(user: user, claim: self)
     service.submit
   end
+  # rubocop:enable Metrics/MethodLength
 
   def upload_to_vbms(doc_type: '1167')
     form_path = PdfFill::Filler.fill_form(self)
