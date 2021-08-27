@@ -56,11 +56,9 @@ RSpec.describe AfterLoginJob do
       let(:user) { create(:user) }
       let(:login_type) { 'myhealthevet' }
 
-      before do
-        allow_any_instance_of(UserIdentity).to receive(:sign_in).and_return(service_name: login_type)
-      end
+      before { allow_any_instance_of(UserIdentity).to receive(:sign_in).and_return(service_name: login_type) }
 
-      context 'with non_existant login stats record' do
+      context 'with non-existant login stats record' do
         it 'will create an account_login_stats record' do
           expect { described_class.new.perform('user_uuid' => user.uuid) }.to \
             change(AccountLoginStat, :count).by(1)
