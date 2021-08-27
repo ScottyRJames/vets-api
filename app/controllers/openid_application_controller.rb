@@ -35,10 +35,10 @@ class OpenidApplicationController < ApplicationController
   def authenticate_token
     return false if token.blank?
 
-    # Static token gets a pass
+    # Static tokens do not have a session built up at this time.
     return true if token.static?
 
-    # For now only opaque tokens are static
+    # For now only opaque tokens are static, all others are opaque tokens are invalid.
     return false if token.opaque?
 
     # Only want to fetch the Okta profile if the session isn't already established and not a CC token
