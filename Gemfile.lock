@@ -42,7 +42,7 @@ GIT
 
 GIT
   remote: https://github.com/department-of-veterans-affairs/bgs-ext.git
-  revision: 02ee02ba73399580bc5507539f67307bc433612a
+  revision: 85754065901f6a1982c3e33e59231487aa2039bd
   specs:
     bgs_ext (0.21.1)
       httpclient
@@ -193,8 +193,8 @@ GEM
     attr_extras (6.2.4)
     awesome_print (1.9.2)
     aws-eventstream (1.1.1)
-    aws-partitions (1.488.0)
-    aws-sdk-core (3.119.0)
+    aws-partitions (1.492.0)
+    aws-sdk-core (3.119.1)
       aws-eventstream (~> 1, >= 1.0.2)
       aws-partitions (~> 1, >= 1.239.0)
       aws-sigv4 (~> 1.1)
@@ -202,7 +202,7 @@ GEM
     aws-sdk-kms (1.46.0)
       aws-sdk-core (~> 3, >= 3.119.0)
       aws-sigv4 (~> 1.1)
-    aws-sdk-s3 (1.99.0)
+    aws-sdk-s3 (1.100.0)
       aws-sdk-core (~> 3, >= 3.119.0)
       aws-sdk-kms (~> 1)
       aws-sigv4 (~> 1.1)
@@ -376,7 +376,7 @@ GEM
       activesupport (>= 4.2)
     fastimage (2.2.5)
     ffi (1.15.1)
-    fhir_client (5.0.0)
+    fhir_client (5.0.1)
       activesupport (>= 3)
       addressable (>= 2.3)
       fhir_dstu2_models (>= 1.1.0)
@@ -557,7 +557,7 @@ GEM
     netrc (0.11.0)
     nio4r (2.5.8)
     no_proxy_fix (0.1.2)
-    nokogiri (1.12.3)
+    nokogiri (1.12.4)
       mini_portile2 (~> 2.6.1)
       racc (~> 1.4)
     nori (2.6.0)
@@ -1015,7 +1015,7 @@ DEPENDENCIES
   faraday_middleware
   fast_jsonapi
   fastimage
-  fhir_client (~> 5.0.0)
+  fhir_client (~> 5.0.1)
   flipper (~> 0.21.0)
   flipper-active_record (~> 0.21.0)
   flipper-active_support_cache_store (~> 0.21.0)
