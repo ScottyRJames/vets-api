@@ -7,6 +7,21 @@ require 'json'
 module VAOS
   module V2
     class AppointmentsService < VAOS::SessionService
+      # def get_appointments(start_date, end_date, statuses = nil, pagination_params = {})
+      #   params = date_params(start_date, end_date)
+      #            .merge(page_params(pagination_params))
+      #            .merge(status_params(statuses))
+      #            .compact
+
+      #   with_monitoring do
+      #     response = perform(:get, appointments_base_url, params, headers)
+      #     {
+      #       data: deserialized_appointments(response.body[:data]),
+      #       meta: pagination(pagination_params)
+      #     }
+      #   end
+      # end
+
       def get_appointments(start_date, end_date, statuses = nil, pagination_params = {})
         params = date_params(start_date, end_date)
                  .merge(page_params(pagination_params))
@@ -15,10 +30,7 @@ module VAOS
 
         with_monitoring do
           response = perform(:get, appointments_base_url, params, headers)
-          {
-            data: deserialized_appointments(response.body[:data]),
-            meta: pagination(pagination_params)
-          }
+          deserialized_appointments(response.body[:data])
         end
       end
 

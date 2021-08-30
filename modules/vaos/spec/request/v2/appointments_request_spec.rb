@@ -48,12 +48,13 @@ RSpec.describe 'vaos appointments', type: :request, skip_mvi: true do
 
       context 'requests a list of appointments' do
         it 'has access and returns va appointments' do
-          VCR.use_cassette('vaos/v2/appointments/get_appointments_200', match_requests_on: %i[method uri]) do
+          VCR.use_cassette('vaos/v2/appointments/get_appointments_200', match_requests_on: %i[method uri], allow_playback_repeats: true) do
             get '/vaos/v2/appointments', params: params, headers: inflection_header
-
+            data = JSON.parse(response.body)['data']
             expect(response).to have_http_status(:ok)
             expect(response.body).to be_a(String)
-            expect(JSON.parse(response.body)['data'].size).to eq(84)
+            expect(data.size).to eq(18)
+            expect(data[0]['attributes']['stationName']).to eq('CHYSHR-Cheyenne VA Medical Center')
             expect(response).to match_camelized_response_schema('vaos/v2/appointments', { strict: false })
           end
         end

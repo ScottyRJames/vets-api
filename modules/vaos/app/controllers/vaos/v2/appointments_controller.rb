@@ -6,8 +6,10 @@ module VAOS
   module V2
     class AppointmentsController < VAOS::V0::BaseController
       def index
+        appointments
+        merge_clinic_name(appointments)
         serializer = VAOS::V2::VAOSSerializer.new
-        serialized = serializer.serialize(appointments[:data], 'appointments')
+        serialized = serializer.serialize(appointments, 'appointments')
         render json: { data: serialized }
       end
 
@@ -36,9 +38,45 @@ module VAOS
         VAOS::V2::AppointmentsService.new(current_user)
       end
 
+      def systems_service
+        VAOS::V2::SystemsService.new(current_user)
+      end
+
+
       def appointments
         @appointments ||=
           appointments_service.get_appointments(start_date, end_date, statuses, pagination_params)
+      end
+
+      def merge_clinic_name(appointments)
+          appointments.each { |appt|
+            if(!appt[:clinic].nil?) 
+              clinic = systems_service.get_facility_clinics(location_id: appt[:location_id], clinic_ids: appt[:clinic])
+              appt[:station_name] = clinic.first[:station_name]
+            end
+          }	
+      end
+
+      # def clinics(appointments)
+      #   @clinics ||= do
+      #     locations = appointments.each { |appointment|
+      #       { location_id: appointment[:location_id], clinic: appointment[:clinic]} 
+      #     }.reduce({}) { |aggregate, item|	
+      #       unless aggregate[item[:location_id].to_i]
+      #         aggregate[item[:location_id].to_i] = [item[:clinic].to_i]
+      #       else
+      #         aggregate[item[:location_id].to_i].append item[:clinic].to_i
+      #       end
+      #       aggregate
+      #     }.each { |key, value| 
+      #       #get_clinics(key, value)
+      #     }
+      #   end
+      # end
+
+      def get_clinics(location_id, clinic_ids)
+        systems_service.get_facility_clinics(location_id: location_id,
+            clinic_ids: params[clinic_ids])
       end
 
       def appointment
