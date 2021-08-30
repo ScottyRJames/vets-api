@@ -58,6 +58,18 @@ RSpec.describe V0::VirtualAgentTokenController, type: :controller do
 
         expect(response).to have_http_status(:ok)
       end
+      it('returns api_session') do
+        allow(Flipper).to receive(:enabled?).with(:virtual_agent_token).and_return(true)
+        allow(Flipper).to receive(:enabled?).with(:virtual_agent_bot_a).and_return(true)
+
+        VCR.use_cassette('virtual_agent/webchat_token_success') do
+          post :create
+        end
+
+        res = JSON.parse(response.body)
+
+        expect(res['apiSession']).to eq('fake_api_session')
+      end
     end
 
     context 'virtual_agent_token toggle is off' do
