@@ -20,6 +20,7 @@ module SAML
 
     LOGIN_REDIRECT_PARTIAL = '/auth/login/callback'
     LOGOUT_REDIRECT_PARTIAL = '/logout/'
+    IDME_AUTHN_CONTEXT = 'https://eauth.va.gov/csp?Select=idme3'
 
     attr_reader :saml_settings, :session, :user, :authn_context, :type, :query_params, :tracker
 
@@ -88,7 +89,7 @@ module SAML
 
     def idme_url
       @type = 'idme'
-      build_sso_url(LOA::IDME_LOA1_VETS)
+      build_sso_url([LOA::IDME_LOA1_VETS, IDME_AUTHN_CONTEXT])
     end
 
     def custom_url(authn)
