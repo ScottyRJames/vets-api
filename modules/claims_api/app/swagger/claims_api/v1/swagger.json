@@ -496,7 +496,7 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "53053e23-0687-4bf4-b195-fada22dbb98b",
+                    "id": "19cdfe42-d122-452c-aea7-4e3cf8064a9c",
                     "type": "claims_api_claim",
                     "attributes": {
                       "evss_id": 600118851,
@@ -545,11 +545,11 @@
                       "status": "Initial review",
                       "supporting_documents": [
                         {
-                          "id": "ab67b674-76a4-4cc9-a1bb-de8811998f62",
+                          "id": "a519c6d5-24c3-43cb-8341-78bfd3ecf18a",
                           "type": "claim_supporting_document",
                           "md5": "d927c7e283b3158a54822a493d06181d",
                           "filename": "extras.pdf",
-                          "uploaded_at": "2021-08-24T20:35:58.222Z"
+                          "uploaded_at": "2021-08-25T20:35:43.222Z"
                         }
                       ]
                     }
@@ -1768,9 +1768,7 @@
                                 "enum": [
                                   "NONE",
                                   "NEW",
-                                  "SECONDARY",
-                                  "INCREASE",
-                                  "REOPEN"
+                                  "INCREASE"
                                 ],
                                 "example": "NEW"
                               },
@@ -1805,8 +1803,7 @@
                                         "NONE",
                                         "NEW",
                                         "SECONDARY",
-                                        "INCREASE",
-                                        "REOPEN"
+                                        "INCREASE"
                                       ],
                                       "example": "SECONDARY"
                                     },
@@ -1987,23 +1984,44 @@
                                 }
                               }
                             },
-                            "if": {
-                              "properties": {
-                                "disabilityActionType": {
-                                  "enum": [
-                                    "INCREASE"
+                            "allOf": [
+                              {
+                                "if": {
+                                  "properties": {
+                                    "disabilityActionType": {
+                                      "enum": [
+                                        "INCREASE"
+                                      ]
+                                    }
+                                  }
+                                },
+                                "then": {
+                                  "required": [
+                                    "ratedDisabilityId",
+                                    "diagnosticCode"
                                   ]
                                 }
                               },
-                              "required": [
-                                "disabilityActionType"
-                              ]
-                            },
-                            "then": {
-                              "required": [
-                                "ratedDisabilityId"
-                              ]
-                            }
+                              {
+                                "if": {
+                                  "properties": {
+                                    "disabilityActiontype": {
+                                      "enum": [
+                                        "NONE"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "secondaryDisabilities"
+                                  ]
+                                },
+                                "then": {
+                                  "required": [
+                                    "diagnosticCode"
+                                  ]
+                                }
+                              }
+                            ]
                           }
                         },
                         "treatments": {
@@ -2162,6 +2180,21 @@
                                   "type": "string",
                                   "example": "Will be retiring soon."
                                 }
+                              },
+                              "if": {
+                                "properties": {
+                                  "willReceiveInFuture": {
+                                    "const": true
+                                  }
+                                },
+                                "required": [
+                                  "willReceiveInFuture"
+                                ]
+                              },
+                              "then": {
+                                "required": [
+                                  "futurePayExplanation"
+                                ]
                               }
                             },
                             "hasSeparationPay": {
@@ -2381,7 +2414,7 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "214de8a3-a650-4303-a94b-20f5dfa69de4",
+                    "id": "0815d3fe-80a9-4da2-ac2b-d8043ca0fba7",
                     "type": "claims_api_claim",
                     "attributes": {
                       "evss_id": null,
@@ -2399,13 +2432,13 @@
                       "current_phase_back": null,
                       "requested_decision": null,
                       "claim_type": null,
-                      "updated_at": "2021-08-24T20:35:58.586Z",
+                      "updated_at": "2021-08-25T20:35:43.743Z",
                       "contention_list": null,
                       "va_representative": null,
                       "events_timeline": [
 
                       ],
-                      "token": "214de8a3-a650-4303-a94b-20f5dfa69de4",
+                      "token": "0815d3fe-80a9-4da2-ac2b-d8043ca0fba7",
                       "status": "pending",
                       "flashes": [
                         "Hardship",
@@ -3574,9 +3607,7 @@
                                   "enum": [
                                     "NONE",
                                     "NEW",
-                                    "SECONDARY",
-                                    "INCREASE",
-                                    "REOPEN"
+                                    "INCREASE"
                                   ],
                                   "example": "NEW"
                                 },
@@ -3611,8 +3642,7 @@
                                           "NONE",
                                           "NEW",
                                           "SECONDARY",
-                                          "INCREASE",
-                                          "REOPEN"
+                                          "INCREASE"
                                         ],
                                         "example": "SECONDARY"
                                       },
@@ -3793,23 +3823,44 @@
                                   }
                                 }
                               },
-                              "if": {
-                                "properties": {
-                                  "disabilityActionType": {
-                                    "enum": [
-                                      "INCREASE"
+                              "allOf": [
+                                {
+                                  "if": {
+                                    "properties": {
+                                      "disabilityActionType": {
+                                        "enum": [
+                                          "INCREASE"
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  "then": {
+                                    "required": [
+                                      "ratedDisabilityId",
+                                      "diagnosticCode"
                                     ]
                                   }
                                 },
-                                "required": [
-                                  "disabilityActionType"
-                                ]
-                              },
-                              "then": {
-                                "required": [
-                                  "ratedDisabilityId"
-                                ]
-                              }
+                                {
+                                  "if": {
+                                    "properties": {
+                                      "disabilityActiontype": {
+                                        "enum": [
+                                          "NONE"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "secondaryDisabilities"
+                                    ]
+                                  },
+                                  "then": {
+                                    "required": [
+                                      "diagnosticCode"
+                                    ]
+                                  }
+                                }
+                              ]
                             }
                           },
                           "treatments": {
@@ -3968,6 +4019,21 @@
                                     "type": "string",
                                     "example": "Will be retiring soon."
                                   }
+                                },
+                                "if": {
+                                  "properties": {
+                                    "willReceiveInFuture": {
+                                      "const": true
+                                    }
+                                  },
+                                  "required": [
+                                    "willReceiveInFuture"
+                                  ]
+                                },
+                                "then": {
+                                  "required": [
+                                    "futurePayExplanation"
+                                  ]
                                 }
                               },
                               "hasSeparationPay": {
@@ -4200,7 +4266,7 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "e39779a8-fae6-45ee-800f-4087e5a94740",
+                    "id": "f6560143-bdc1-4515-b40f-a06ac2a30589",
                     "type": "claims_api_claim",
                     "attributes": {
                       "evss_id": null,
@@ -4218,13 +4284,13 @@
                       "current_phase_back": null,
                       "requested_decision": null,
                       "claim_type": null,
-                      "updated_at": "2021-08-24T20:35:58.985Z",
+                      "updated_at": "2021-08-25T20:35:44.205Z",
                       "contention_list": null,
                       "va_representative": null,
                       "events_timeline": [
 
                       ],
-                      "token": "e39779a8-fae6-45ee-800f-4087e5a94740",
+                      "token": "f6560143-bdc1-4515-b40f-a06ac2a30589",
                       "status": "pending",
                       "flashes": [
                         "Hardship",
@@ -5794,9 +5860,7 @@
                                   "enum": [
                                     "NONE",
                                     "NEW",
-                                    "SECONDARY",
-                                    "INCREASE",
-                                    "REOPEN"
+                                    "INCREASE"
                                   ],
                                   "example": "NEW"
                                 },
@@ -5831,8 +5895,7 @@
                                           "NONE",
                                           "NEW",
                                           "SECONDARY",
-                                          "INCREASE",
-                                          "REOPEN"
+                                          "INCREASE"
                                         ],
                                         "example": "SECONDARY"
                                       },
@@ -6013,23 +6076,44 @@
                                   }
                                 }
                               },
-                              "if": {
-                                "properties": {
-                                  "disabilityActionType": {
-                                    "enum": [
-                                      "INCREASE"
+                              "allOf": [
+                                {
+                                  "if": {
+                                    "properties": {
+                                      "disabilityActionType": {
+                                        "enum": [
+                                          "INCREASE"
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  "then": {
+                                    "required": [
+                                      "ratedDisabilityId",
+                                      "diagnosticCode"
                                     ]
                                   }
                                 },
-                                "required": [
-                                  "disabilityActionType"
-                                ]
-                              },
-                              "then": {
-                                "required": [
-                                  "ratedDisabilityId"
-                                ]
-                              }
+                                {
+                                  "if": {
+                                    "properties": {
+                                      "disabilityActiontype": {
+                                        "enum": [
+                                          "NONE"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "secondaryDisabilities"
+                                    ]
+                                  },
+                                  "then": {
+                                    "required": [
+                                      "diagnosticCode"
+                                    ]
+                                  }
+                                }
+                              ]
                             }
                           },
                           "treatments": {
@@ -6188,6 +6272,21 @@
                                     "type": "string",
                                     "example": "Will be retiring soon."
                                   }
+                                },
+                                "if": {
+                                  "properties": {
+                                    "willReceiveInFuture": {
+                                      "const": true
+                                    }
+                                  },
+                                  "required": [
+                                    "willReceiveInFuture"
+                                  ]
+                                },
+                                "then": {
+                                  "required": [
+                                    "futurePayExplanation"
+                                  ]
                                 }
                               },
                               "hasSeparationPay": {
@@ -6420,7 +6519,7 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "ca064d83-0ed6-48b6-a047-71397c513220",
+                    "id": "f75db8bf-7bab-43ec-8951-96b44a1cee4c",
                     "type": "claims_api_claim",
                     "attributes": {
                       "evss_id": null,
@@ -6434,7 +6533,7 @@
                       "decision_letter_sent": null,
                       "requested_decision": null,
                       "claim_type": null,
-                      "updated_at": "2021-08-24T20:35:59.710Z",
+                      "updated_at": "2021-08-25T20:35:45.283Z",
                       "contention_list": null,
                       "va_representative": null,
                       "events_timeline": [
@@ -6443,7 +6542,7 @@
                       "status": "pending",
                       "supporting_documents": [
                         {
-                          "id": "16e50302-f504-4880-9729-5c6177c17590",
+                          "id": "5eea5626-a2d4-4986-a8c7-ed9f60ed9a60",
                           "type": "claim_supporting_document",
                           "md5": null,
                           "filename": null,
@@ -8400,11 +8499,11 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "998c8b91-f922-43bd-8d77-42726c63cb09",
+                    "id": "e2df298c-7cec-437e-89fb-d8314cbd8222",
                     "type": "claims_api_power_of_attorneys",
                     "attributes": {
                       "status": "pending",
-                      "date_request_accepted": "2021-08-24",
+                      "date_request_accepted": "2021-08-25",
                       "representative": {
                         "service_organization": {
                           "poa_code": "074"
@@ -9113,11 +9212,11 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "f9dc2580-e204-46e0-aa15-46a46934d76a",
+                    "id": "b5873321-c48f-4c81-8405-7d2d76d24ee0",
                     "type": "claims_api_power_of_attorneys",
                     "attributes": {
                       "status": "submitted",
-                      "date_request_accepted": "2021-08-24",
+                      "date_request_accepted": "2021-08-25",
                       "representative": {
                         "service_organization": {
                           "poa_code": "074"
@@ -9438,11 +9537,11 @@
               "application/json": {
                 "example": {
                   "data": {
-                    "id": "32169ff8-1492-4c87-929c-88d3025886cf",
+                    "id": "f5febae5-4080-4fc9-b193-f7af7f81ff63",
                     "type": "claims_api_power_of_attorneys",
                     "attributes": {
                       "status": "submitted",
-                      "date_request_accepted": "2021-08-24",
+                      "date_request_accepted": "2021-08-25",
                       "representative": {
                         "service_organization": {
                           "poa_code": "074"
