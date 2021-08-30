@@ -17,6 +17,7 @@ module VBADocuments
 
     def perform
       return unless Settings.vba_documents.s3.enabled
+
       rows = VBADocuments::UploadSubmission.where(REMOVAL_QUERY, EXPIRATION_TIME.ago).order(created_at: :asc).limit(100)
 
       rows.find_each do |upload|
