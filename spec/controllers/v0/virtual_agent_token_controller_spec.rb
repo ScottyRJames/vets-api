@@ -58,7 +58,9 @@ RSpec.describe V0::VirtualAgentTokenController, type: :controller do
 
         expect(response).to have_http_status(:ok)
       end
+
       it('returns api_session') do
+        request.cookies["api_session"] = "fake_api_session"
         allow(Flipper).to receive(:enabled?).with(:virtual_agent_token).and_return(true)
         allow(Flipper).to receive(:enabled?).with(:virtual_agent_bot_a).and_return(true)
 
