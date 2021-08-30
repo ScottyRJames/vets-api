@@ -25,7 +25,7 @@ RSpec.describe SAML::URLService do
       context "virtual host: #{vhost_url}" do
         let(:saml_settings) do
           callback_path = URI.parse(Settings.saml_ssoe.callback_url).path
-          build(:settings_no_context_v1, assertion_consumer_service_url: "#{vhost_url}#{callback_path}")
+          build(:settings_no_context, assertion_consumer_service_url: "#{vhost_url}#{callback_path}")
         end
 
         let(:params) { { action: 'new' } }
@@ -257,7 +257,7 @@ RSpec.describe SAML::URLService do
       context "virtual host: #{vhost_url}" do
         let(:saml_settings) do
           callback_path = URI.parse(Settings.saml_ssoe.callback_url).path
-          build(:settings_no_context_v1, assertion_consumer_service_url: "#{vhost_url}#{callback_path}")
+          build(:settings_no_context, assertion_consumer_service_url: "#{vhost_url}#{callback_path}")
         end
 
         let(:params) { { action: 'new' } }
