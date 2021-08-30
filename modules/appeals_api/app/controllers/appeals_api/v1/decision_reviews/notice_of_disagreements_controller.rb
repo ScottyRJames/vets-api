@@ -7,6 +7,7 @@ class AppealsApi::V1::DecisionReviews::NoticeOfDisagreementsController < Appeals
   include AppealsApi::JsonFormatValidation
   include AppealsApi::StatusSimulation
   include AppealsApi::CharacterUtilities
+  include AppealsApi::CharacterValidation
 
   skip_before_action :authenticate
   before_action :validate_characters, only: %i[create validate]

@@ -7,6 +7,7 @@ module AppealsApi::V1
         include AppealsApi::StatusSimulation
         include SentryLogging
         include AppealsApi::CharacterUtilities
+        include AppealsApi::CharacterValidation
 
         class EvidenceSubmissionRequestValidatorError < StandardError; end
 
