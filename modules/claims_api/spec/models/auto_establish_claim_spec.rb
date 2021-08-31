@@ -185,6 +185,53 @@ RSpec.describe ClaimsApi::AutoEstablishedClaim, type: :model do
         end
       end
     end
+
+    describe "breaking out 'separationPay.receivedDate'" do
+      it 'breaks it out by year, month, day' do
+        temp_form_data = pending_record.form_data
+        temp_form_data.merge!(
+          {
+            'servicePay' => {
+              'separationPay' => {
+                'received' => true,
+                'receivedDate' => '2018-03-02',
+                'payment' => {
+                  'serviceBranch' => 'Air Force',
+                  'amount' => 100
+                }
+              }
+            }
+          }
+        )
+        pending_record.form_data = temp_form_data
+
+        payload = JSON.parse(pending_record.to_internal)
+        expect(payload['form526']['servicePay']['separationPay']['receivedDate']).to include(
+          'year' => '2018',
+          'month' => '3',
+          'day' => '2'
+        )
+      end
+    end
+
+    describe "breaking out 'disabilities.approximateBeginDate'" do
+      it 'breaks it out by year, month, day' do
+        disability = pending_record.form_data['disabilities'].first
+        disability.merge!(
+          {
+            'approximateBeginDate' => '1989-12-01'
+          }
+        )
+        pending_record.form_data['disabilities'][0] = disability
+
+        payload = JSON.parse(pending_record.to_internal)
+        expect(payload['form526']['disabilities'].first['approximateBeginDate']).to include(
+          'year' => '1989',
+          'month' => '12',
+          'day' => '1'
+        )
+      end
+    end
   end
 
   describe 'evss_id_by_token' do
@@ -240,6 +287,59 @@ RSpec.describe ClaimsApi::AutoEstablishedClaim, type: :model do
 
       expect(auto_form.file_name).to eq(auto_form.file_data['filename'])
       expect(auto_form.document_type).to eq(auto_form.file_data['doc_type'])
+    end
+  end
+
+  describe "breaking out 'treatments.startDate'" do
+    it 'breaks it out by year, month, day' do
+      treatments = [
+        {
+          'center' => {
+            'name' => 'Some Treatment Center',
+            'country' => 'United States of America'
+          },
+          'treatedDisabilityNames' => [
+            'PTSD (post traumatic stress disorder)'
+          ],
+          'startDate' => '1985-01-01'
+        }
+      ]
+
+      pending_record.form_data['treatments'] = treatments
+
+      payload = JSON.parse(pending_record.to_internal)
+      expect(payload['form526']['treatments'].first['startDate']).to include(
+        'year' => '1985',
+        'month' => '1',
+        'day' => '1'
+      )
+    end
+  end
+
+  describe "breaking out 'treatments.endDate'" do
+    it 'breaks it out by year, month, day' do
+      treatments = [
+        {
+          'center' => {
+            'name' => 'Some Treatment Center',
+            'country' => 'United States of America'
+          },
+          'treatedDisabilityNames' => [
+            'PTSD (post traumatic stress disorder)'
+          ],
+          'startDate' => '1985-01-01',
+          'endDate' => '1986-01-01'
+        }
+      ]
+
+      pending_record.form_data['treatments'] = treatments
+
+      payload = JSON.parse(pending_record.to_internal)
+      expect(payload['form526']['treatments'].first['endDate']).to include(
+        'year' => '1986',
+        'month' => '1',
+        'day' => '1'
+      )
     end
   end
 end

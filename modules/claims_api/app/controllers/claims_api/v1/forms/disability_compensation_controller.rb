@@ -155,6 +155,43 @@ module ClaimsApi
           validate_form_526_veteran_homelessness!
           validate_form_526_service_pay!
           validate_form_526_title10_activation_date!
+          validate_form_526_change_of_address!
+          validate_form_526_disabilities!
+          validate_form_526_treatments!
+        end
+
+        def validate_form_526_change_of_address!
+          validate_form_526_change_of_address_ending_date!
+          validate_form_526_change_of_address_beginning_date!
+          validate_form_526_change_of_address_country!
+        end
+
+        def validate_form_526_change_of_address_beginning_date!
+          change_of_address = form_attributes.dig('veteran', 'changeOfAddress')
+          return if change_of_address.blank?
+          return unless change_of_address['addressChangeType'] == 'TEMPORARY'
+          return if Date.parse(change_of_address['beginningDate']) > Time.zone.now
+
+          raise ::Common::Exceptions::InvalidFieldValue.new('beginningDate', change_of_address['beginningDate'])
+        end
+
+        def validate_form_526_change_of_address_ending_date!
+          change_of_address = form_attributes.dig('veteran', 'changeOfAddress')
+          return if change_of_address.blank?
+          return if change_of_address['addressChangeType'] == 'TEMPORARY' && change_of_address['endingDate'].present?
+          return if change_of_address['addressChangeType'] == 'PERMANENT' && change_of_address['endingDate'].blank?
+
+          raise ::Common::Exceptions::InvalidFieldValue.new('endingDate', change_of_address['endingDate'])
+        end
+
+        def validate_form_526_change_of_address_country!
+          change_of_address = form_attributes.dig('veteran', 'changeOfAddress')
+          return if change_of_address.blank?
+
+          countries = EVSS::ReferenceData::Service.new(@current_user).get_countries.countries
+          return if countries.include?(change_of_address['country'])
+
+          raise ::Common::Exceptions::InvalidFieldValue.new('country', change_of_address['country'])
         end
 
         def validate_form_526_title10_activation_date!
@@ -260,6 +297,11 @@ module ClaimsApi
         end
 
         def validate_form_526_service_pay!
+          validate_form_526_military_retired_pay!
+          validate_form_526_separation_pay!
+        end
+
+        def validate_form_526_military_retired_pay!
           receiving_attr    = form_attributes.dig('servicePay', 'militaryRetiredPay', 'receiving')
           will_receive_attr = form_attributes.dig('servicePay', 'militaryRetiredPay', 'willReceiveInFuture')
 
@@ -271,6 +313,20 @@ module ClaimsApi
             'servicePay.militaryRetiredPay',
             form_attributes['servicePay']['militaryRetiredPay']
           )
+        end
+
+        def validate_form_526_separation_pay!
+          validate_form_526_separation_pay_received_date!
+        end
+
+        def validate_form_526_separation_pay_received_date!
+          separation_pay_received_date = form_attributes.dig('servicePay', 'separationPay', 'receivedDate')
+
+          return if separation_pay_received_date.blank?
+
+          return if Date.parse(separation_pay_received_date) < Time.zone.today
+
+          raise ::Common::Exceptions::InvalidFieldValue.new('separationPay.receivedDate', separation_pay_received_date)
         end
 
         def too_many_homelessness_attributes_provided?
@@ -288,6 +344,95 @@ module ClaimsApi
 
           # EVSS does not allow passing a 'pointOfContact' if neither homelessness attribute is provided
           currently_homeless_attr.blank? && homelessness_risk_attr.blank? && homelessness_poc_attr.present?
+        end
+
+        def validate_form_526_disabilities!
+          validate_form_526_disability_classification_code!
+          validate_form_526_disability_approximate_begin_date!
+        end
+
+        def validate_form_526_disability_classification_code!
+          return if (form_attributes['disabilities'].pluck('classificationCode') - [nil]).blank?
+
+          contention_classification_type_codes = bgs_service.data.get_contention_classification_type_code_list
+          classification_ids = contention_classification_type_codes.pluck(:clsfcn_id)
+          form_attributes['disabilities'].each do |disability|
+            next if disability['classificationCode'].blank?
+            next if classification_ids.include?(disability['classificationCode'])
+
+            raise ::Common::Exceptions::InvalidFieldValue.new('disabilities.classificationCode',
+                                                              disability['classificationCode'])
+          end
+        end
+
+        def validate_form_526_disability_approximate_begin_date!
+          disabilities = form_attributes.dig('disabilities')
+          return if disabilities.blank?
+
+          disabilities.each do |disability|
+            approx_begin_date = disability['approximateBeginDate']
+            next if approx_begin_date.blank?
+
+            next if Date.parse(approx_begin_date) < Time.zone.today
+
+            raise ::Common::Exceptions::InvalidFieldValue.new('disability.approximateBeginDate', approx_begin_date)
+          end
+        end
+
+        def validate_form_526_treatments!
+          treatments = form_attributes.dig('treatments')
+          return if treatments.blank?
+
+          validate_treatment_start_dates!
+          validate_treatment_end_dates!
+          validate_treated_disability_names!
+        end
+
+        def validate_treatment_start_dates!
+          treatments = form_attributes.dig('treatments')
+          return if treatments.blank?
+
+          earliest_begin_date = form_attributes['serviceInformation']['servicePeriods'].map do |service_period|
+            Date.parse(service_period['activeDutyBeginDate'])
+          end.min
+
+          treatments.each do |treatment|
+            next if Date.parse(treatment['startDate']) > earliest_begin_date
+
+            raise ::Common::Exceptions::InvalidFieldValue.new('treatments.startDate', treatment['startDate'])
+          end
+        end
+
+        def validate_treatment_end_dates!
+          treatments = form_attributes.dig('treatments')
+          return if treatments.blank?
+
+          treatments.each do |treatment|
+            next if treatment['endDate'].blank?
+
+            treatment_start_date = Date.parse(treatment['startDate'])
+            treatment_end_date   = Date.parse(treatment['endDate'])
+
+            next if treatment_end_date > treatment_start_date
+
+            raise ::Common::Exceptions::InvalidFieldValue.new('treatments.endDate', treatment['endDate'])
+          end
+        end
+
+        def validate_treated_disability_names!
+          treatments = form_attributes.dig('treatments')
+          return if treatments.blank?
+
+          declared_disability_names = form_attributes['disabilities'].pluck('name')
+
+          treatments.each do |treatment|
+            next if treatment['treatedDisabilityNames'].all? { |name| declared_disability_names.include?(name) }
+
+            raise ::Common::Exceptions::InvalidFieldValue.new(
+              'treatments.treatedDisabilityNames',
+              treatment['treatedDisabilityNames']
+            )
+          end
         end
 
         def flashes

@@ -38,6 +38,197 @@ RSpec.describe 'Disability Claims ', type: :request do
     let(:path) { '/services/claims/v1/forms/526' }
     let(:schema) { File.read(Rails.root.join('modules', 'claims_api', 'config', 'schemas', '526.json')) }
 
+    describe "'treatments' validations" do
+      describe "'treatment.startDate' validations" do
+        let(:treatments) do
+          [
+            {
+              center: {
+                name: 'Some Treatment Center',
+                country: 'United States of America'
+              },
+              treatedDisabilityNames: [
+                'PTSD (post traumatic stress disorder)'
+              ],
+              startDate: treatment_start_date
+            }
+          ]
+        end
+
+        context "when 'treatment.startDate' is prior to earliest 'servicePeriods.activeDutyBeginDate'" do
+          let(:treatment_start_date) { '1970-01-01' }
+
+          it 'returns a bad request' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  json_data = JSON.parse data
+                  params = json_data
+                  params['data']['attributes']['treatments'] = treatments
+                  post path, params: params.to_json, headers: headers.merge(auth_header)
+                  expect(response.status).to eq(400)
+                end
+              end
+            end
+          end
+        end
+
+        context "when 'treatment.startDate' is after earliest 'servicePeriods.activeDutyBeginDate'" do
+          let(:treatment_start_date) { '1985-01-01' }
+
+          it 'returns a 200' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  json_data = JSON.parse data
+                  params = json_data
+                  params['data']['attributes']['treatments'] = treatments
+                  post path, params: params.to_json, headers: headers.merge(auth_header)
+                  expect(response.status).to eq(200)
+                end
+              end
+            end
+          end
+        end
+      end
+
+      describe "'treatment.endDate' validations" do
+        let(:treatments) do
+          [
+            {
+              center: {
+                name: 'Some Treatment Center',
+                country: 'United States of America'
+              },
+              treatedDisabilityNames: [
+                'PTSD (post traumatic stress disorder)'
+              ],
+              startDate: '1985-01-01',
+              endDate: treatment_end_date
+            }
+          ]
+        end
+
+        context "when 'treatment.endDate' is before 'treatment.startDate'" do
+          let(:treatment_end_date) { '1984-01-01' }
+
+          it 'returns a bad request' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  json_data = JSON.parse data
+                  params = json_data
+                  params['data']['attributes']['treatments'] = treatments
+                  post path, params: params.to_json, headers: headers.merge(auth_header)
+                  expect(response.status).to eq(400)
+                end
+              end
+            end
+          end
+        end
+
+        context "when 'treatment.endDate' is after 'treatment.startDate'" do
+          let(:treatment_end_date) { '1986-01-01' }
+
+          it 'returns a 200' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  json_data = JSON.parse data
+                  params = json_data
+                  params['data']['attributes']['treatments'] = treatments
+                  post path, params: params.to_json, headers: headers.merge(auth_header)
+                  expect(response.status).to eq(200)
+                end
+              end
+            end
+          end
+        end
+
+        context "when 'treatment.endDate' is not provided" do
+          let(:treatments) do
+            [
+              {
+                center: {
+                  name: 'Some Treatment Center',
+                  country: 'United States of America'
+                },
+                treatedDisabilityNames: [
+                  'PTSD (post traumatic stress disorder)'
+                ],
+                startDate: '1985-01-01'
+              }
+            ]
+          end
+
+          it 'returns a 200' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  json_data = JSON.parse data
+                  params = json_data
+                  params['data']['attributes']['treatments'] = treatments
+                  post path, params: params.to_json, headers: headers.merge(auth_header)
+                  expect(response.status).to eq(200)
+                end
+              end
+            end
+          end
+        end
+      end
+
+      describe "'treatment.treatedDisabilityNames' validations" do
+        let(:treatments) do
+          [
+            {
+              center: {
+                name: 'Some Treatment Center',
+                country: 'United States of America'
+              },
+              treatedDisabilityNames: treated_disability_names,
+              startDate: '1985-01-01'
+            }
+          ]
+        end
+
+        context "when 'treatment.treatedDisabilityNames' includes value that does not match 'disability'" do
+          let(:treated_disability_names) { ['not included in submitted disabilities collection'] }
+
+          it 'returns a bad request' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  json_data = JSON.parse data
+                  params = json_data
+                  params['data']['attributes']['treatments'] = treatments
+                  post path, params: params.to_json, headers: headers.merge(auth_header)
+                  expect(response.status).to eq(400)
+                end
+              end
+            end
+          end
+        end
+
+        context "when 'treatment.treatedDisabilityNames' includes value that does match 'disability'" do
+          let(:treated_disability_names) { ['PTSD (post traumatic stress disorder)'] }
+
+          it 'returns a 200' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  json_data = JSON.parse data
+                  params = json_data
+                  params['data']['attributes']['treatments'] = treatments
+                  post path, params: params.to_json, headers: headers.merge(auth_header)
+                  expect(response.status).to eq(200)
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
     context 'when Veteran has all necessary identifiers' do
       describe 'schema' do
         it 'returns a successful get response with json schema' do
@@ -138,6 +329,140 @@ RSpec.describe 'Disability Claims ', type: :request do
               expect(EVSS::DisabilityCompensationAuthHeaders).to(receive(:new).once { auth_header_stub })
               expect(auth_header_stub).to receive(:add_headers).once
               post path, params: data, headers: headers.merge(auth_header)
+            end
+          end
+        end
+      end
+
+      context 'when changeOfAddress information is submitted' do
+        let(:json_data) { JSON.parse data }
+
+        context 'when addressChangeType is TEMPORARY' do
+          let(:change_of_address) do
+            {
+              beginningDate: (Time.zone.now + 1.month).to_date.to_s,
+              addressChangeType: 'TEMPORARY',
+              addressLine1: '1234 Couch Street',
+              city: 'New York City',
+              state: 'NY',
+              type: 'DOMESTIC',
+              zipFirstFive: '12345',
+              country: 'USA'
+            }
+          end
+
+          it 'raises an exception that endingDate is not provided' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  VCR.use_cassette('evss/reference_data/countries') do
+                    par = json_data
+                    par['data']['attributes']['veteran']['changeOfAddress'] = change_of_address
+
+                    post path, params: par.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(422)
+                  end
+                end
+              end
+            end
+          end
+
+          context 'when beginningDate is in the past' do
+            let(:json_data) { JSON.parse data }
+
+            context 'when addressChangeType is TEMPORARY' do
+              let(:change_of_address) do
+                {
+                  beginningDate: (Time.zone.now - 1.month).to_date.to_s,
+                  endingDate: (Time.zone.now + 1.month).to_date.to_s,
+                  addressChangeType: 'TEMPORARY',
+                  addressLine1: '1234 Couch Street',
+                  city: 'New York City',
+                  state: 'NY',
+                  type: 'DOMESTIC',
+                  zipFirstFive: '12345',
+                  country: 'USA'
+                }
+              end
+
+              it 'raises an exception that beginningDate is not valid' do
+                with_okta_user(scopes) do |auth_header|
+                  VCR.use_cassette('evss/claims/claims') do
+                    VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                      VCR.use_cassette('evss/reference_data/countries') do
+                        par = json_data
+                        par['data']['attributes']['veteran']['changeOfAddress'] = change_of_address
+
+                        post path, params: par.to_json, headers: headers.merge(auth_header)
+                        expect(response.status).to eq(400)
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        context 'when addressChangeType is PERMANENT' do
+          let(:change_of_address) do
+            {
+              beginningDate: (Time.zone.now + 1.month).to_date.to_s,
+              endingDate: (Time.zone.now + 2.months).to_date.to_s,
+              addressChangeType: 'PERMANENT',
+              addressLine1: '1234 Couch Street',
+              city: 'New York City',
+              state: 'NY',
+              type: 'DOMESTIC',
+              zipFirstFive: '12345',
+              country: 'USA'
+            }
+          end
+
+          it 'raises an exception that endingDate is provided but should not be' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  VCR.use_cassette('evss/reference_data/countries') do
+                    par = json_data
+                    par['data']['attributes']['veteran']['changeOfAddress'] = change_of_address
+
+                    post path, params: par.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(400)
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        context 'when an invalid country is submitted' do
+          let(:change_of_address) do
+            {
+              beginningDate: (Time.zone.now + 1.month).to_date.to_s,
+              addressChangeType: 'PERMANENT',
+              addressLine1: '1234 Couch Street',
+              city: 'New York City',
+              state: 'NY',
+              type: 'DOMESTIC',
+              zipFirstFive: '12345',
+              country: 'BlahBlahBlah'
+            }
+          end
+
+          it 'raises an exception that country is invalid' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  VCR.use_cassette('evss/reference_data/countries') do
+                    par = json_data
+                    par['data']['attributes']['veteran']['changeOfAddress'] = change_of_address
+
+                    post path, params: par.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(400)
+                  end
+                end
+              end
             end
           end
         end
@@ -299,7 +624,7 @@ RSpec.describe 'Disability Claims ', type: :request do
             params['data']['attributes']['disabilities'] = [{}]
             post path, params: params.to_json, headers: headers.merge(auth_header)
             expect(response.status).to eq(422)
-            expect(JSON.parse(response.body)['errors'].size).to eq(2)
+            expect(JSON.parse(response.body)['errors'].size).to eq(4)
           end
         end
 
@@ -760,93 +1085,465 @@ RSpec.describe 'Disability Claims ', type: :request do
       end
     end
 
-    describe "'servicePay.militaryRetiredPay' validations" do
-      let(:service_pay_attribute) do
-        {
-          'militaryRetiredPay': {
-            'receiving': receiving,
-            'willReceiveInFuture': will_receive,
-            'payment': {
-              'serviceBranch': 'Air Force'
+    describe "'servicePay validations'" do
+      describe "'servicePay.militaryRetiredPay' validations" do
+        describe "'receiving' and 'willReceiveInFuture' validations" do
+          let(:service_pay_attribute) do
+            {
+              'militaryRetiredPay': {
+                'receiving': receiving,
+                'willReceiveInFuture': will_receive,
+                'futurePayExplanation': 'Some explanation',
+                'payment': {
+                  'serviceBranch': 'Air Force'
+                }
+              }
             }
-          }
-        }
+          end
+
+          context "when 'receiving' and 'willReceiveInFuture' are equal but not 'nil'" do
+            context "when both are 'true'" do
+              let(:receiving) { true }
+              let(:will_receive) { true }
+
+              before do
+                stub_mpi
+              end
+
+              it 'responds with a bad request' do
+                with_okta_user(scopes) do |auth_header|
+                  VCR.use_cassette('evss/claims/claims') do
+                    VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                      json_data = JSON.parse data
+                      params = json_data
+                      params['data']['attributes']['servicePay'] = service_pay_attribute
+                      post path, params: params.to_json, headers: headers.merge(auth_header)
+                      expect(response.status).to eq(400)
+                    end
+                  end
+                end
+              end
+            end
+
+            context "when both are 'false'" do
+              let(:receiving) { false }
+              let(:will_receive) { false }
+
+              before do
+                stub_mpi
+              end
+
+              it 'responds with a bad request' do
+                with_okta_user(scopes) do |auth_header|
+                  VCR.use_cassette('evss/claims/claims') do
+                    VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                      json_data = JSON.parse data
+                      params = json_data
+                      params['data']['attributes']['servicePay'] = service_pay_attribute
+                      post path, params: params.to_json, headers: headers.merge(auth_header)
+                      expect(response.status).to eq(400)
+                    end
+                  end
+                end
+              end
+            end
+          end
+
+          context "when 'receiving' and 'willReceiveInFuture' are not equal" do
+            context "when 'receiving' is 'false' and 'willReceiveInFuture' is 'true'" do
+              let(:receiving) { false }
+              let(:will_receive) { true }
+
+              before do
+                stub_mpi
+              end
+
+              it 'responds with a 200' do
+                with_okta_user(scopes) do |auth_header|
+                  VCR.use_cassette('evss/claims/claims') do
+                    VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                      json_data = JSON.parse data
+                      params = json_data
+                      params['data']['attributes']['servicePay'] = service_pay_attribute
+                      post path, params: params.to_json, headers: headers.merge(auth_header)
+                      expect(response.status).to eq(200)
+                    end
+                  end
+                end
+              end
+            end
+
+            context "when 'receiving' is 'true' and 'willReceiveInFuture' is 'false'" do
+              let(:receiving) { true }
+              let(:will_receive) { false }
+
+              before do
+                stub_mpi
+              end
+
+              it 'responds with a 200' do
+                with_okta_user(scopes) do |auth_header|
+                  VCR.use_cassette('evss/claims/claims') do
+                    VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                      json_data = JSON.parse data
+                      params = json_data
+                      params['data']['attributes']['servicePay'] = service_pay_attribute
+                      post path, params: params.to_json, headers: headers.merge(auth_header)
+                      expect(response.status).to eq(200)
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        describe "'payment'" do
+          let(:service_pay_attribute) do
+            {
+              'militaryRetiredPay': {
+                'receiving': true,
+                'willReceiveInFuture': false,
+                'payment': {
+                  'serviceBranch': 'Air Force',
+                  'amount': military_retired_payment_amount
+                }
+              }
+            }
+          end
+
+          context "when 'amount' is below the minimum" do
+            let(:military_retired_payment_amount) { 0 }
+
+            before do
+              stub_mpi
+            end
+
+            it 'responds with an unprocessible entity' do
+              with_okta_user(scopes) do |auth_header|
+                VCR.use_cassette('evss/claims/claims') do
+                  VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                    json_data = JSON.parse data
+                    params = json_data
+                    params['data']['attributes']['servicePay'] = service_pay_attribute
+                    post path, params: params.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(422)
+                  end
+                end
+              end
+            end
+          end
+
+          context "when 'amount' is above the maximum" do
+            let(:military_retired_payment_amount) { 1_000_000 }
+
+            before do
+              stub_mpi
+            end
+
+            it 'responds with an unprocessible entity' do
+              with_okta_user(scopes) do |auth_header|
+                VCR.use_cassette('evss/claims/claims') do
+                  VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                    json_data = JSON.parse data
+                    params = json_data
+                    params['data']['attributes']['servicePay'] = service_pay_attribute
+                    post path, params: params.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(422)
+                  end
+                end
+              end
+            end
+          end
+
+          context "when 'amount' is within limits" do
+            let(:military_retired_payment_amount) { 100 }
+
+            before do
+              stub_mpi
+            end
+
+            it 'responds with a 200' do
+              with_okta_user(scopes) do |auth_header|
+                VCR.use_cassette('evss/claims/claims') do
+                  VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                    json_data = JSON.parse data
+                    params = json_data
+                    params['data']['attributes']['servicePay'] = service_pay_attribute
+                    post path, params: params.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(200)
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        describe "'futurePayExplanation'" do
+          context "when 'militaryRetiredPay.willReceiveInFuture' is 'true'" do
+            let(:will_receive_in_future) { true }
+
+            context "when 'militaryRetiredPay.futurePayExplanation' is not provided" do
+              let(:service_pay_attribute) do
+                {
+                  'militaryRetiredPay': {
+                    'receiving': false,
+                    'willReceiveInFuture': will_receive_in_future,
+                    'payment': {
+                      'serviceBranch': 'Air Force'
+                    }
+                  }
+                }
+              end
+
+              before do
+                stub_mpi
+              end
+
+              it 'responds with an unprocessible entity' do
+                with_okta_user(scopes) do |auth_header|
+                  VCR.use_cassette('evss/claims/claims') do
+                    VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                      json_data = JSON.parse data
+                      params = json_data
+                      params['data']['attributes']['servicePay'] = service_pay_attribute
+                      post path, params: params.to_json, headers: headers.merge(auth_header)
+                      expect(response.status).to eq(422)
+                    end
+                  end
+                end
+              end
+            end
+
+            context "when 'militaryRetiredPay.futurePayExplanation' is provided" do
+              let(:service_pay_attribute) do
+                {
+                  'militaryRetiredPay': {
+                    'receiving': false,
+                    'willReceiveInFuture': will_receive_in_future,
+                    'futurePayExplanation': 'Retiring soon.',
+                    'payment': {
+                      'serviceBranch': 'Air Force'
+                    }
+                  }
+                }
+              end
+
+              before do
+                stub_mpi
+              end
+
+              it 'responds with a 200' do
+                with_okta_user(scopes) do |auth_header|
+                  VCR.use_cassette('evss/claims/claims') do
+                    VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                      json_data = JSON.parse data
+                      params = json_data
+                      params['data']['attributes']['servicePay'] = service_pay_attribute
+                      post path, params: params.to_json, headers: headers.merge(auth_header)
+                      expect(response.status).to eq(200)
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
       end
 
-      context "when 'receiving' and 'willReceiveInFuture' are equal but not 'nil'" do
-        context "when both are 'true'" do
-          let(:receiving) { true }
-          let(:will_receive) { true }
+      describe "'servicePay.separationPay' validations" do
+        describe "'payment'" do
+          let(:service_pay_attribute) do
+            {
+              'separationPay': {
+                'received': true,
+                'receivedDate': (Time.zone.today - 1.year).to_s,
+                'payment': {
+                  'serviceBranch': 'Air Force',
+                  'amount': separation_payment_amount
+                }
+              }
+            }
+          end
 
-          it 'responds with a bad request' do
-            with_okta_user(scopes) do |auth_header|
-              VCR.use_cassette('evss/claims/claims') do
-                VCR.use_cassette('evss/reference_data/get_intake_sites') do
-                  json_data = JSON.parse data
-                  params = json_data
-                  params['data']['attributes']['servicePay'] = service_pay_attribute
-                  post path, params: params.to_json, headers: headers.merge(auth_header)
-                  expect(response.status).to eq(400)
+          context "when 'amount' is below the minimum" do
+            let(:separation_payment_amount) { 0 }
+
+            before do
+              stub_mpi
+            end
+
+            it 'responds with an unprocessible entity' do
+              with_okta_user(scopes) do |auth_header|
+                VCR.use_cassette('evss/claims/claims') do
+                  VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                    json_data = JSON.parse data
+                    params = json_data
+                    params['data']['attributes']['servicePay'] = service_pay_attribute
+                    post path, params: params.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(422)
+                  end
+                end
+              end
+            end
+          end
+
+          context "when 'amount' is above the maximum" do
+            let(:separation_payment_amount) { 1_000_000 }
+
+            before do
+              stub_mpi
+            end
+
+            it 'responds with an unprocessible entity' do
+              with_okta_user(scopes) do |auth_header|
+                VCR.use_cassette('evss/claims/claims') do
+                  VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                    json_data = JSON.parse data
+                    params = json_data
+                    params['data']['attributes']['servicePay'] = service_pay_attribute
+                    post path, params: params.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(422)
+                  end
+                end
+              end
+            end
+          end
+
+          context "when 'amount' is within limits" do
+            let(:separation_payment_amount) { 100 }
+
+            before do
+              stub_mpi
+            end
+
+            it 'responds with a 200' do
+              with_okta_user(scopes) do |auth_header|
+                VCR.use_cassette('evss/claims/claims') do
+                  VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                    json_data = JSON.parse data
+                    params = json_data
+                    params['data']['attributes']['servicePay'] = service_pay_attribute
+                    post path, params: params.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(200)
+                  end
                 end
               end
             end
           end
         end
 
-        context "when both are 'false'" do
-          let(:receiving) { false }
-          let(:will_receive) { false }
+        describe "'receivedDate'" do
+          let(:service_pay_attribute) do
+            {
+              'separationPay': {
+                'received': true,
+                'receivedDate': received_date,
+                'payment': {
+                  'serviceBranch': 'Air Force',
+                  'amount': 100
+                }
+              }
+            }
+          end
 
-          it 'responds with a bad request' do
-            with_okta_user(scopes) do |auth_header|
-              VCR.use_cassette('evss/claims/claims') do
-                VCR.use_cassette('evss/reference_data/get_intake_sites') do
-                  json_data = JSON.parse data
-                  params = json_data
-                  params['data']['attributes']['servicePay'] = service_pay_attribute
-                  post path, params: params.to_json, headers: headers.merge(auth_header)
-                  expect(response.status).to eq(400)
+          context "when 'receivedDate' is not in the past" do
+            let(:received_date) { Time.zone.today.to_s }
+
+            before do
+              stub_mpi
+            end
+
+            it 'responds with a bad request' do
+              with_okta_user(scopes) do |auth_header|
+                VCR.use_cassette('evss/claims/claims') do
+                  VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                    json_data = JSON.parse data
+                    params = json_data
+                    params['data']['attributes']['servicePay'] = service_pay_attribute
+                    post path, params: params.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(400)
+                  end
+                end
+              end
+            end
+          end
+
+          context "when 'receivedDate' is in the past" do
+            let(:received_date) { (Time.zone.today - 1.year).to_s }
+
+            before do
+              stub_mpi
+            end
+
+            it 'responds with a 200' do
+              with_okta_user(scopes) do |auth_header|
+                VCR.use_cassette('evss/claims/claims') do
+                  VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                    json_data = JSON.parse data
+                    params = json_data
+                    params['data']['attributes']['servicePay'] = service_pay_attribute
+                    post path, params: params.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(200)
+                  end
                 end
               end
             end
           end
         end
       end
+    end
 
-      context "when 'receiving' and 'willReceiveInFuture' are not equal" do
-        context "when 'receiving' is 'false' and 'willReceiveInFuture' is 'true'" do
-          let(:receiving) { false }
-          let(:will_receive) { true }
+    describe "'disabilities.classificationCode' validations" do
+      let(:classification_type_codes) { [{ clsfcn_id: '1111' }] }
 
-          it 'responds with a 200' do
-            with_okta_user(scopes) do |auth_header|
-              VCR.use_cassette('evss/claims/claims') do
-                VCR.use_cassette('evss/reference_data/get_intake_sites') do
-                  json_data = JSON.parse data
-                  params = json_data
-                  params['data']['attributes']['servicePay'] = service_pay_attribute
-                  post path, params: params.to_json, headers: headers.merge(auth_header)
-                  expect(response.status).to eq(200)
-                end
+      before do
+        stub_mpi
+
+        expect_any_instance_of(BGS::StandardDataService)
+          .to receive(:get_contention_classification_type_code_list).and_return(classification_type_codes)
+      end
+
+      context "when 'disabilites.classificationCode' is valid" do
+        it 'returns a successful response' do
+          with_okta_user(scopes) do |auth_header|
+            VCR.use_cassette('evss/claims/claims') do
+              VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                json_data = JSON.parse data
+                params = json_data
+                disabilities = [
+                  {
+                    disabilityActionType: 'NEW',
+                    name: 'PTSD (post traumatic stress disorder)',
+                    classificationCode: '1111'
+                  }
+                ]
+                params['data']['attributes']['disabilities'] = disabilities
+                post path, params: params.to_json, headers: headers.merge(auth_header)
+                expect(response.status).to eq(200)
               end
             end
           end
         end
+      end
 
-        context "when 'receiving' is 'true' and 'willReceiveInFuture' is 'false'" do
-          let(:receiving) { true }
-          let(:will_receive) { false }
-
-          it 'responds with a 200' do
-            with_okta_user(scopes) do |auth_header|
-              VCR.use_cassette('evss/claims/claims') do
-                VCR.use_cassette('evss/reference_data/get_intake_sites') do
-                  json_data = JSON.parse data
-                  params = json_data
-                  params['data']['attributes']['servicePay'] = service_pay_attribute
-                  post path, params: params.to_json, headers: headers.merge(auth_header)
-                  expect(response.status).to eq(200)
-                end
+      context "when 'disabilites.classificationCode' is invalid" do
+        it 'responds with a bad request' do
+          with_okta_user(scopes) do |auth_header|
+            VCR.use_cassette('evss/claims/claims') do
+              VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                json_data = JSON.parse data
+                params = json_data
+                disabilities = [
+                  {
+                    disabilityActionType: 'NEW',
+                    name: 'PTSD (post traumatic stress disorder)',
+                    classificationCode: '2222'
+                  }
+                ]
+                params['data']['attributes']['disabilities'] = disabilities
+                post path, params: params.to_json, headers: headers.merge(auth_header)
+                expect(response.status).to eq(400)
               end
             end
           end
@@ -857,11 +1554,7 @@ RSpec.describe 'Disability Claims ', type: :request do
     describe "'disabilities.ratedDisabilityId' validations" do
       context "when 'disabilites.disabilityActionType' equals 'INCREASE'" do
         context "and 'disabilities.ratedDisabilityId' is not provided" do
-          before do
-            stub_mpi
-          end
-
-          it 'responds with an unprocessible entity' do
+          it 'returns an unprocessible entity status' do
             with_okta_user(scopes) do |auth_header|
               VCR.use_cassette('evss/claims/claims') do
                 VCR.use_cassette('evss/reference_data/get_intake_sites') do
@@ -869,6 +1562,7 @@ RSpec.describe 'Disability Claims ', type: :request do
                   params = json_data
                   disabilities = [
                     {
+                      diagnosticCode: 123,
                       disabilityActionType: 'INCREASE',
                       name: 'PTSD (post traumatic stress disorder)'
                     }
@@ -883,11 +1577,31 @@ RSpec.describe 'Disability Claims ', type: :request do
         end
 
         context "and 'disabilities.ratedDisabilityId' is provided" do
-          before do
-            stub_mpi
-          end
-
           it 'responds with a 200' do
+            with_okta_user(scopes) do |auth_header|
+              VCR.use_cassette('evss/claims/claims') do
+                VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                  json_data = JSON.parse data
+                  params = json_data
+                  disabilities = [
+                    {
+                      diagnosticCode: 123,
+                      ratedDisabilityId: '1100583',
+                      disabilityActionType: 'INCREASE',
+                      name: 'PTSD (post traumatic stress disorder)'
+                    }
+                  ]
+                  params['data']['attributes']['disabilities'] = disabilities
+                  post path, params: params.to_json, headers: headers.merge(auth_header)
+                  expect(response.status).to eq(200)
+                end
+              end
+            end
+          end
+        end
+
+        context "and 'disabilities.diagnosticCode' is not provided" do
+          it 'returns an unprocessible entity status' do
             with_okta_user(scopes) do |auth_header|
               VCR.use_cassette('evss/claims/claims') do
                 VCR.use_cassette('evss/reference_data/get_intake_sites') do
@@ -902,7 +1616,41 @@ RSpec.describe 'Disability Claims ', type: :request do
                   ]
                   params['data']['attributes']['disabilities'] = disabilities
                   post path, params: params.to_json, headers: headers.merge(auth_header)
-                  expect(response.status).to eq(200)
+                  expect(response.status).to eq(422)
+                end
+              end
+            end
+          end
+        end
+      end
+
+      context "when 'disabilites.disabilityActionType' equals 'NONE'" do
+        context "and 'disabilites.secondaryDisabilities' is defined" do
+          context "and 'disabilites.diagnosticCode is not provided" do
+            it 'returns an unprocessible entity status' do
+              with_okta_user(scopes) do |auth_header|
+                VCR.use_cassette('evss/claims/claims') do
+                  VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                    json_data = JSON.parse data
+                    params = json_data
+                    disabilities = [
+                      {
+                        disabilityActionType: 'NONE',
+                        name: 'PTSD (post traumatic stress disorder)',
+                        secondaryDisabilities: [
+                          {
+                            name: 'PTSD personal trauma',
+                            disabilityActionType: 'SECONDARY',
+                            serviceRelevance: 'Caused by a service-connected disability\\nLengthy description',
+                            specialIssues: ['Radiation', 'Emergency Care – CH17 Determination']
+                          }
+                        ]
+                      }
+                    ]
+                    params['data']['attributes']['disabilities'] = disabilities
+                    post path, params: params.to_json, headers: headers.merge(auth_header)
+                    expect(response.status).to eq(422)
+                  end
                 end
               end
             end
@@ -912,10 +1660,6 @@ RSpec.describe 'Disability Claims ', type: :request do
 
       context "when 'disabilites.disabilityActionType' equals value other than 'INCREASE'" do
         context "and 'disabilities.ratedDisabilityId' is not provided" do
-          before do
-            stub_mpi
-          end
-
           it 'responds with a 200' do
             with_okta_user(scopes) do |auth_header|
               VCR.use_cassette('evss/claims/claims') do
@@ -924,6 +1668,7 @@ RSpec.describe 'Disability Claims ', type: :request do
                   params = json_data
                   disabilities = [
                     {
+                      diagnosticCode: 123,
                       disabilityActionType: 'NONE',
                       name: 'PTSD (post traumatic stress disorder)'
                     }
@@ -932,6 +1677,62 @@ RSpec.describe 'Disability Claims ', type: :request do
                   post path, params: params.to_json, headers: headers.merge(auth_header)
                   expect(response.status).to eq(200)
                 end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    describe "'disabilites.approximateBeginDate'" do
+      let(:disabilities) do
+        [
+          {
+            disabilityActionType: 'NEW',
+            name: 'PTSD (post traumatic stress disorder)',
+            approximateBeginDate: approximate_begin_date
+          }
+        ]
+      end
+
+      context "when 'approximateBeginDate' is in the future" do
+        let(:approximate_begin_date) { (Time.zone.today + 1.year).to_s }
+
+        before do
+          stub_mpi
+        end
+
+        it 'responds with a bad request' do
+          with_okta_user(scopes) do |auth_header|
+            VCR.use_cassette('evss/claims/claims') do
+              VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                json_data = JSON.parse data
+                params = json_data
+                params['data']['attributes']['disabilities'] = disabilities
+                post path, params: params.to_json, headers: headers.merge(auth_header)
+                expect(response.status).to eq(400)
+              end
+            end
+          end
+        end
+      end
+
+      context "when 'approximateBeginDate' is in the past" do
+        let(:approximate_begin_date) { (Time.zone.today - 1.year).to_s }
+
+        before do
+          stub_mpi
+        end
+
+        it 'responds with a 200' do
+          with_okta_user(scopes) do |auth_header|
+            VCR.use_cassette('evss/claims/claims') do
+              VCR.use_cassette('evss/reference_data/get_intake_sites') do
+                json_data = JSON.parse data
+                params = json_data
+                params['data']['attributes']['disabilities'] = disabilities
+                post path, params: params.to_json, headers: headers.merge(auth_header)
+                expect(response.status).to eq(200)
               end
             end
           end
