@@ -231,7 +231,7 @@ class OpenidApplicationController < ApplicationController
       json_response
     end
   rescue => e
-    raise raise error_klass('Invalid token') if e.to_s.include?('Unauthorized')
+    raise error_klass('Invalid token') if e.to_s.include?('Unauthorized')
 
     raise Common::Exceptions::ServiceError('Issued service error')
   end
