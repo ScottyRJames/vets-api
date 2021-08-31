@@ -152,7 +152,7 @@ RSpec.describe EducationForm::Process10203Submissions, type: :model, form: :educ
       it 'skips POA check for user without an EDIPI' do
         expect(Flipper).to receive(:enabled?).with(:stem_automated_decision, any_args).and_return(false).at_least(:once)
         application_10203 = create(:va10203)
-        application_10203.create_stem_automated_decision(no_edipi_evss_user)
+        application_10203.after_submit(no_edipi_evss_user)
 
         subject.perform
         application_10203.reload
